@@ -6,6 +6,7 @@ export enum Page {
   Missions,
   CommunityHealthMap,
   VoiceAssistant,
+  MentalHealthCheck,
 }
 
 export interface Mission {
@@ -26,4 +27,13 @@ export interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
+}
+
+export type Mood = 'happy' | 'calm' | 'neutral' | 'sad' | 'anxious';
+
+export interface MentalHealthCheckin {
+  id: string;
+  date: string; // ISO string
+  mood: Mood;
+  reflection?: string;
 }

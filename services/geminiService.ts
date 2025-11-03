@@ -1,4 +1,5 @@
-import { GoogleGenAI, Chat, GenerateContentResponse, Modality, LiveSession, Blob, LiveServerMessage } from '@google/genai';
+// Fix: Removed `LiveSession` from the import as it's no longer exported.
+import { GoogleGenAI, Chat, GenerateContentResponse, Modality, Blob, LiveServerMessage } from '@google/genai';
 import { GroundingChunk } from '../types';
 import { encode } from '../utils/audioUtils';
 
@@ -88,7 +89,8 @@ export const startLiveHealthSession = (
     onError: (error: ErrorEvent) => void;
     onClose: (event: CloseEvent) => void;
   }
-): Promise<LiveSession> => {
+// Fix: Removed explicit return type `Promise<LiveSession>` to let TypeScript infer it.
+) => {
   const systemInstruction = `You are "Shastho Bondhu" (Health Friend), a caring and empathetic AI health assistant for a rural community app in Bangladesh. Your tone should always be warm, supportive, and natural, like a trusted community health worker. You are having a real-time voice conversation.
 - The user will speak in Bengali. Process all user input as Bengali.
 - When a user describes symptoms, first assess if they are for a common, non-serious ailment (like a simple fever, cold, or headache) or if they could indicate something serious.

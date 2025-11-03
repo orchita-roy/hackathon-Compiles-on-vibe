@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MicrophoneIcon } from '../components/IconComponents';
 import { startLiveHealthSession, createPcmBlob } from '../services/geminiService';
-import { LiveSession, LiveServerMessage } from '@google/genai';
+// Fix: Removed `LiveSession` as it's no longer exported from `@google/genai`.
+import { LiveServerMessage } from '@google/genai';
 import { decode, decodeAudioData } from '../utils/audioUtils';
 
 type Status = 'idle' | 'connecting' | 'connected' | 'error';
@@ -34,7 +35,8 @@ const VoiceAssistantPage: React.FC = () => {
     const botTranscriptForTurnRef = useRef<string>('');
 
     // Refs for audio and session management
-    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    // Fix: Used `ReturnType` to infer the session promise type instead of the removed `LiveSession`.
+    const sessionPromiseRef = useRef<ReturnType<typeof startLiveHealthSession> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -212,20 +214,20 @@ const VoiceAssistantPage: React.FC = () => {
             case 'connected':
                 return { style: 'bg-red-500', label: 'কথা বলা থামাতে ট্যাপ করুন', pulse: true };
             case 'error':
-                return { style: 'bg-gray-500', label: 'আবার চেষ্টা করুন', pulse: false };
+                return { style: 'bg-stone-500', label: 'আবার চেষ্টা করুন', pulse: false };
             case 'idle':
             default:
-                return { style: 'bg-emerald-600', label: 'কথা বলতে ট্যাপ করুন', pulse: false };
+                return { style: 'bg-teal-600', label: 'কথা বলতে ট্যাপ করুন', pulse: false };
         }
     };
     const { style, label, pulse } = getStatusInfo();
 
     return (
-        <div className="bg-white dark:bg-gray-900 min-h-[calc(100vh-8rem)] flex flex-col">
+        <div className="bg-stone-50 dark:bg-slate-900 min-h-[calc(100vh-8rem)] flex flex-col">
             {/* Header */}
-            <header className="text-center p-6 border-b dark:border-gray-700">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">স্বাস্থ্য বন্ধু</h1>
-                <p className="text-gray-600 dark:text-gray-400">আপনার প্রশ্ন জিজ্ঞাসা করুন, আমি সাহায্য করতে এখানে আছি।</p>
+            <header className="text-center p-6 border-b dark:border-slate-700">
+                <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-100">স্বাস্থ্য বন্ধু</h1>
+                <p className="text-stone-600 dark:text-stone-400">আপনার প্রশ্ন জিজ্ঞাসা করুন, আমি সাহায্য করতে এখানে আছি।</p>
             </header>
 
             {/* Chat Area */}
@@ -233,12 +235,12 @@ const VoiceAssistantPage: React.FC = () => {
                 {transcripts.map((t) => (
                     <div key={t.id}>
                         {t.user && <div className="flex justify-end my-2">
-                            <div className="bg-emerald-500 text-white rounded-lg px-4 py-2 max-w-[80%]">
+                            <div className="bg-teal-500 text-white rounded-lg px-4 py-2 max-w-[80%]">
                                 {t.user}
                             </div>
                         </div>}
                         {t.bot && <div className="flex justify-start my-2">
-                            <div className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg px-4 py-2 max-w-[80%]">
+                            <div className="bg-stone-200 dark:bg-slate-700 text-stone-800 dark:text-stone-200 rounded-lg px-4 py-2 max-w-[80%]">
                                 {t.bot}
                             </div>
                         </div>}
@@ -246,12 +248,12 @@ const VoiceAssistantPage: React.FC = () => {
                 ))}
                 {/* Live Transcripts */}
                 {currentInterimUserTranscript && <div className="flex justify-end my-2">
-                    <div className="bg-emerald-200 dark:bg-emerald-800 text-gray-600 dark:text-gray-300 rounded-lg px-4 py-2 max-w-[80%]">
+                    <div className="bg-teal-200 dark:bg-teal-900/50 text-stone-600 dark:text-stone-300 rounded-lg px-4 py-2 max-w-[80%]">
                         {currentInterimUserTranscript}
                     </div>
                 </div>}
                 {currentBotTranscript && <div className="flex justify-start my-2">
-                    <div className="bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg px-4 py-2 max-w-[80%]">
+                    <div className="bg-stone-300 dark:bg-slate-600 text-stone-600 dark:text-stone-300 rounded-lg px-4 py-2 max-w-[80%]">
                         {currentBotTranscript}
                     </div>
                 </div>}
@@ -260,7 +262,7 @@ const VoiceAssistantPage: React.FC = () => {
             </div>
 
             {/* Controls */}
-            <div className="p-4 border-t dark:border-gray-700 flex flex-col items-center">
+            <div className="p-4 border-t dark:border-slate-700 flex flex-col items-center">
                 <button
                     onClick={handleToggleSession}
                     className={`w-20 h-20 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-105 text-white ${style} ${pulse ? 'animate-pulse' : ''}`}
@@ -269,7 +271,7 @@ const VoiceAssistantPage: React.FC = () => {
                 >
                     <MicrophoneIcon className="h-10 w-10" />
                 </button>
-                <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 h-6">{label}</p>
+                <p className="mt-4 text-lg text-stone-600 dark:text-stone-300 h-6">{label}</p>
             </div>
         </div>
     );

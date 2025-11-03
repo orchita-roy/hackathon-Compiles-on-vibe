@@ -7,6 +7,7 @@ import MissionsPage from './pages/MissionsPage';
 import CommunityHealthMapPage from './pages/CommunityHealthMapPage';
 import VoiceAssistantPage from './pages/VoiceAssistantPage';
 import Chatbot from './components/Chatbot';
+import MentalHealthCheckPage from './pages/MentalHealthCheckPage';
 
 type Theme = 'light' | 'dark';
 
@@ -45,11 +46,13 @@ const App: React.FC = () => {
       case Page.Home:
         return <HomePage navigateTo={navigateTo} />;
       case Page.Missions:
-        return <MissionsPage />;
+        return <MissionsPage navigateTo={navigateTo} />;
       case Page.CommunityHealthMap:
         return <CommunityHealthMapPage />;
       case Page.VoiceAssistant:
         return <VoiceAssistantPage />;
+      case Page.MentalHealthCheck:
+        return <MentalHealthCheckPage />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }

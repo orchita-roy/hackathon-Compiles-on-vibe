@@ -17,11 +17,11 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleT
     { page: Page.VoiceAssistant, label: 'ভয়েস সহকারী' },
   ];
 
-  const headerClasses = 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-md sticky';
+  const headerClasses = 'bg-stone-50/80 dark:bg-slate-900/80 backdrop-blur-md shadow-md sticky';
   
-  const logoClasses = 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400';
+  const logoClasses = 'text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300';
 
-  const themeToggleClasses = 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800';
+  const themeToggleClasses = 'text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 focus:ring-offset-stone-100 dark:focus:ring-offset-slate-800';
 
 
   return (
@@ -41,8 +41,8 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleT
                   const isActive = currentPage === item.page;
                   const baseClasses = "px-3 py-2 rounded-md text-sm font-medium transition-colors";
                   
-                  const activeClasses = 'bg-emerald-600 text-white';
-                  const inactiveClasses = 'text-gray-700 dark:text-gray-300 hover:bg-emerald-100 dark:hover:bg-gray-800 hover:text-emerald-800 dark:hover:text-white';
+                  const activeClasses = 'bg-teal-600 text-white';
+                  const inactiveClasses = 'text-stone-700 dark:text-stone-300 hover:bg-teal-100 dark:hover:bg-slate-800 hover:text-teal-800 dark:hover:text-white';
 
                   return (
                     <button
@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleT
             </div>
             <button
               onClick={toggleTheme}
-              className={`ml-6 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${themeToggleClasses}`}
+              className={`ml-6 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${themeToggleClasses}`}
               aria-label="Toggle theme"
             >
               {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
