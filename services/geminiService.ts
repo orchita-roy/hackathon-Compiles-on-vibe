@@ -1,4 +1,4 @@
-import { GoogleGenAI, Chat, GenerateContentResponse, Modality, LiveSession, Blob } from '@google/genai';
+import { GoogleGenAI, Chat, GenerateContentResponse, Modality, LiveSession, Blob, LiveServerMessage } from '@google/genai';
 import { GroundingChunk } from '../types';
 import { encode } from '../utils/audioUtils';
 
@@ -55,48 +55,7 @@ export const findNearbyPlaces = async (query: string): Promise<{ text: string; c
   }
 };
 
-
-// Health Advisor functionality
-export const getHealthAdvice = async (
-  query: string,
-  location: { latitude: number; longitude: number } | null
-): Promise<{ text: string; chunks: GroundingChunk[] }> => {
-  const systemInstruction = `You are "Shastho Bondhu" (Health Friend), a caring and empathetic AI health assistant for a rural community app in Bangladesh. Your tone should always be warm, supportive, and natural, like a trusted community health worker. Your role is to provide preliminary advice for common, non-emergency health issues and suggest seeking professional medical help for serious conditions.
-- The user will speak in Bengali. Process all user input as Bengali, even if it contains some English words (Banglish).
-- For common ailments like fever, cold, or headache, you may suggest common over-the-counter remedies.
-- For any condition that seems serious, complex, or requires a diagnosis, you MUST recommend consulting a doctor or clinic.
-- When recommending a doctor or clinic, use the provided tools to find nearby locations.
-- ALWAYS include this disclaimer at the end of your response, exactly as written: 'দাবিত্যাগ: এটি পেশাদার চিকিৎসা পরামর্শের বিকল্প নয়। সঠিক تشخیص এবং চিকিৎসার জন্য অনুগ্রহ করে একজন ডাক্তারের সাথে পরামর্শ করুন।'
-- **IMPORTANT: You MUST respond exclusively in the Bengali language.**`;
-
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: query,
-      config: {
-        systemInstruction,
-        tools: [{ googleMaps: {} }],
-        toolConfig: location ? {
-          retrievalConfig: {
-            latLng: {
-              latitude: location.latitude,
-              longitude: location.longitude
-            }
-          }
-        } : undefined,
-      },
-    });
-
-    const text = response.text;
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] || [];
-    return { text, chunks };
-  } catch (error) {
-    console.error('Error getting health advice:', error);
-    return { text: 'দুঃখিত, একটি ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।', chunks: [] };
-  }
-};
-
-// Text-to-Speech functionality
+// Text-to-Speech functionality (used by Chatbot)
 export const generateSpeech = async (text: string): Promise<string | null> => {
   try {
     const response = await ai.models.generateContent({
@@ -119,40 +78,49 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   }
 };
 
-// Real-time Transcription functionality
-export const startTranscriptionSession = (
-  onTranscriptionUpdate: (text: string, isFinal: boolean) => void,
-  onError: (error: Error) => void
+
+// Real-time Voice Assistant functionality
+export const startLiveHealthSession = (
+  location: { latitude: number; longitude: number } | null,
+  callbacks: {
+    onOpen?: () => void;
+    onMessage: (message: LiveServerMessage) => void;
+    onError: (error: ErrorEvent) => void;
+    onClose: (event: CloseEvent) => void;
+  }
 ): Promise<LiveSession> => {
-    return ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-        callbacks: {
-            onopen: () => {
-                // Connection is open, component can start sending audio.
-            },
-            onmessage: (message) => {
-                if (message.serverContent?.inputTranscription) {
-                    const { text, isFinal } = message.serverContent.inputTranscription;
-                    onTranscriptionUpdate(text, isFinal ?? false);
-                }
-            },
-            onerror: (e: ErrorEvent) => {
-                console.error('Live session error:', e);
-                onError(new Error('Live session error: ' + (e.message || 'Unknown error')));
-            },
-            onclose: () => {
-                // Session closed
-            },
+  const systemInstruction = `You are "Shastho Bondhu" (Health Friend), a caring and empathetic AI health assistant for a rural community app in Bangladesh. Your tone should always be warm, supportive, and natural, like a trusted community health worker. You are having a real-time voice conversation.
+- The user will speak in Bengali. Process all user input as Bengali.
+- For common ailments like fever, cold, or headache, you may suggest common over-the-counter remedies.
+- For any condition that seems serious, complex, or requires a diagnosis, you MUST recommend consulting a doctor or clinic.
+- When recommending a doctor, mention that the user can find nearby services in the app's Health Map.
+- ALWAYS include this disclaimer at the end of your final response in a turn: 'দাবিত্যাগ: এটি পেশাদার চিকিৎসা পরামর্শের বিকল্প নয়। সঠিক تشخیص এবং চিকিৎসার জন্য অনুগ্রহ করে একজন ডাক্তারের সাথে পরামর্শ করুন।'
+- **IMPORTANT: You MUST respond exclusively in the Bengali language.**
+${location ? `The user's current location is approximately latitude ${location.latitude}, longitude ${location.longitude}.` : ''}`;
+
+  return ai.live.connect({
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    callbacks: {
+      onopen: callbacks.onOpen,
+      onmessage: callbacks.onMessage,
+      onerror: callbacks.onError,
+      onclose: callbacks.onClose,
+    },
+    config: {
+      systemInstruction,
+      responseModalities: [Modality.AUDIO],
+      inputAudioTranscription: {},
+      outputAudioTranscription: {},
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName: 'Kore' },
         },
-        config: {
-            inputAudioTranscription: {},
-            // FIX: Per Gemini API guidelines, responseModalities must contain Modality.AUDIO for the Live API.
-            responseModalities: [Modality.AUDIO],
-        },
-    });
+      },
+    },
+  });
 };
 
-// FIX: Corrected typo from Float3Array to Float32Array.
+
 export const createPcmBlob = (inputData: Float32Array): Blob => {
   const l = inputData.length;
   const int16 = new Int16Array(l);

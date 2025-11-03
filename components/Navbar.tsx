@@ -14,6 +14,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleT
     { page: Page.Home, label: 'Home' },
     { page: Page.Missions, label: 'Missions' },
     { page: Page.CommunityHealthMap, label: 'Health Map' },
+    { page: Page.VoiceAssistant, label: 'Voice Assistant' },
   ];
 
   return (
