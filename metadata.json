@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Community Health Hub",
-  "description": "A comprehensive health platform for rural communities, featuring AI-powered tools like a voice assistant, community health map, and chatbot to improve access to health information and services.",
+  "name": "স্বাস্থ্য বন্ধু",
+  "description": "A comprehensive health platform named 'স্বাস্থ্য বন্ধু' (Health Friend) for rural communities, featuring AI-powered tools like a voice assistant, community health map, and chatbot to improve access to health information and services.",
   "requestFramePermissions": [
     "microphone",
     "geolocation"

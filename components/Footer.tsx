@@ -8,9 +8,9 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
             <HeartIcon className="h-8 w-8 text-emerald-500" />
-            <span className="text-xl font-bold text-gray-200 dark:text-gray-100">Community Health Hub</span>
+            <span className="text-xl font-bold text-gray-200 dark:text-gray-100">স্বাস্থ্য বন্ধু</span>
           </div>
-          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} Community Health Hub. All rights reserved.</p>
+          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} স্বাস্থ্য বন্ধু. All rights reserved.</p>
         </div>
       </div>
     </footer>

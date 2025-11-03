@@ -24,7 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleT
           <div className="flex items-center">
             <button onClick={() => navigateTo(Page.Home)} className="flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400">
               <HeartIcon className="h-8 w-8" />
-              <span className="font-bold text-xl">Health Hub</span>
+              <span className="font-bold text-xl">স্বাস্থ্য বন্ধু</span>
             </button>
           </div>
           <div className="flex items-center">

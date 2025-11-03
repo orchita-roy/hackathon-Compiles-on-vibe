@@ -224,7 +224,7 @@ const VoiceAssistantPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-900 min-h-[calc(100vh-8rem)] flex flex-col">
             {/* Header */}
             <header className="text-center p-6 border-b dark:border-gray-700">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">স্বাস্থ্য সহকারী</h1>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">স্বাস্থ্য বন্ধু</h1>
                 <p className="text-gray-600 dark:text-gray-400">আপনার প্রশ্ন জিজ্ঞাসা করুন, আমি সাহায্য করতে এখানে আছি।</p>
             </header>
 
