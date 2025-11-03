@@ -102,8 +102,8 @@ const Chatbot: React.FC = () => {
       </button>
       
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-full max-w-xl h-[85vh] max-h-[800px] bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl flex flex-col z-40 transform transition-all duration-300 origin-bottom-right">
-          <div className="bg-emerald-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+        <div className="fixed bottom-24 right-6 w-full max-w-md h-[65vh] max-h-[500px] bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-2xl shadow-2xl flex flex-col z-40 transform transition-all duration-300 origin-bottom-right">
+          <div className="bg-emerald-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
             <h3 className="font-bold text-lg">স্বাস্থ্য বন্ধু</h3>
           </div>
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900">

@@ -54,10 +54,15 @@ const App: React.FC = () => {
         return <HomePage navigateTo={navigateTo} />;
     }
   };
-
+  
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar navigateTo={navigateTo} currentPage={currentPage} theme={theme} toggleTheme={toggleTheme} />
+      <Navbar 
+        navigateTo={navigateTo} 
+        currentPage={currentPage} 
+        theme={theme} 
+        toggleTheme={toggleTheme} 
+      />
       <main className="flex-grow">
         {renderPage()}
       </main>
