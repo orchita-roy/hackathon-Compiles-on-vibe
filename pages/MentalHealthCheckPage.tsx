@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MentalHealthCheckin, Mood } from '../types';
+import { InformationCircleIcon } from '../components/IconComponents';
 
 const STORAGE_KEY = 'mentalHealthCheckins';
 
@@ -164,7 +165,8 @@ const MentalHealthCheckPage: React.FC = () => {
                         ) : (
                             <>
                                 {showReminder && (
-                                    <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded-r-lg">
+                                    <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded-r-lg flex items-center space-x-3">
+                                        <InformationCircleIcon className="h-6 w-6 flex-shrink-0" />
                                         <p><span className="font-bold">অনুস্মারক:</span> আপনাকে কিছুক্ষণ ধরে দেখিনি। আপনার অনুভূতি পরীক্ষা করার জন্য এটি একটি ভালো সময়।</p>
                                     </div>
                                 )}

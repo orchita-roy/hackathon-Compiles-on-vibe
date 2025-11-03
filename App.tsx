@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Page } from './types';
 import Navbar from './components/Navbar';
@@ -8,6 +9,10 @@ import CommunityHealthMapPage from './pages/CommunityHealthMapPage';
 import VoiceAssistantPage from './pages/VoiceAssistantPage';
 import Chatbot from './components/Chatbot';
 import MentalHealthCheckPage from './pages/MentalHealthCheckPage';
+import AnonymousHelpRequestPage from './pages/AnonymousHelpRequestPage';
+import SeasonalHealthTipsPage from './pages/SeasonalHealthTipsPage';
+import MaternalAndChildHealthPage from './pages/MaternalAndChildHealthPage';
+import SymptomAwarenessGuidePage from './pages/SymptomAwarenessGuidePage';
 
 type Theme = 'light' | 'dark';
 
@@ -53,6 +58,14 @@ const App: React.FC = () => {
         return <VoiceAssistantPage />;
       case Page.MentalHealthCheck:
         return <MentalHealthCheckPage />;
+      case Page.AnonymousHelpRequest:
+        return <AnonymousHelpRequestPage />;
+      case Page.SeasonalHealthTips:
+        return <SeasonalHealthTipsPage />;
+      case Page.MaternalAndChildHealth:
+        return <MaternalAndChildHealthPage />;
+      case Page.SymptomAwarenessGuide:
+        return <SymptomAwarenessGuidePage />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }

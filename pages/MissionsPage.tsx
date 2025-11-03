@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Mission, Page } from '../types';
-import { HeartIcon, MapIcon, ShieldCheckIcon, SunIcon, UsersIcon, MicrophoneIcon, ClipboardDocumentCheckIcon, BookOpenIcon, CalendarDaysIcon, ClipboardDocumentListIcon, ChartBarIcon } from '../components/IconComponents';
+import { HeartIcon, MapIcon, SunIcon, MicrophoneIcon, ClipboardDocumentCheckIcon, BookOpenIcon, CalendarDaysIcon, ClipboardDocumentListIcon, ChartBarIcon, QuestionMarkCircleIcon } from '../components/IconComponents';
 
 interface MissionWithPage extends Mission {
     page?: Page;
@@ -9,10 +10,10 @@ interface MissionWithPage extends Mission {
 const missions: MissionWithPage[] = [
     { id: 1, title: 'মানসিক স্বাস্থ্য পরীক্ষা', description: 'আপনার মানসিক সুস্থতা বুঝতে প্রতিদিন আপনার মেজাজ লগ করুন।', icon: ClipboardDocumentCheckIcon, page: Page.MentalHealthCheck },
     { id: 2, title: 'কমিউনিটি স্বাস্থ্য মানচিত্র', description: 'অফলাইনেও কাছাকাছি ক্লিনিক, ফার্মেসি এবং স্বাস্থ্যকর্মী খুঁজুন।', icon: MapIcon, page: Page.CommunityHealthMap },
-    { id: 3, title: 'নামবিহীন সাহায্যের অনুরোধ', description: 'ব্যক্তিগতভাবে এবং নিরাপদে মানসিক স্বাস্থ্য সহায়তার জন্য একটি অনুরোধ পাঠান।', icon: ShieldCheckIcon },
-    { id: 4, title: 'ঋতুভিত্তিক স্বাস্থ্য টিপস', description: 'বর্ষা, শীত এবং গ্রীষ্মের জন্য প্রাসঙ্গিক স্বাস্থ্য পরামর্শ পান।', icon: SunIcon },
-    { id: 5, title: 'মাতৃ ও শিশু স্বাস্থ্য', description: 'অনুস্মারক সহ প্রসবপূর্ব যত্ন এবং টিকাদানের সময়সূচী ট্র্যাক করুন।', icon: UsersIcon },
-    { id: 6, title: 'উপসর্গ সচেতনতা নির্দেশিকা', description: 'উপসর্গগুলি বুঝুন এবং কখন পেশাদার সাহায্য নিতে হবে তা জানুন।', icon: BookOpenIcon },
+    { id: 3, title: 'নামবিহীন সাহায্যের অনুরোধ', description: 'ব্যক্তিগতভাবে এবং নিরাপদে মানসিক স্বাস্থ্য সহায়তার জন্য একটি অনুরোধ পাঠান।', icon: QuestionMarkCircleIcon, page: Page.AnonymousHelpRequest },
+    { id: 4, title: 'ঋতুভিত্তিক স্বাস্থ্য টিপস', description: 'বর্ষা, শীত এবং গ্রীষ্মের জন্য প্রাসঙ্গিক স্বাস্থ্য পরামর্শ পান।', icon: SunIcon, page: Page.SeasonalHealthTips },
+    { id: 5, title: 'মাতৃ ও শিশু স্বাস্থ্য', description: 'অনুস্মারক সহ প্রসবপূর্ব যত্ন এবং টিকাদানের সময়সূচী ট্র্যাক করুন।', icon: HeartIcon, page: Page.MaternalAndChildHealth },
+    { id: 6, title: 'উপসর্গ সচেতনতা নির্দেশিকা', description: 'উপসর্গগুলি বুঝুন এবং কখন পেশাদার সাহায্য নিতে হবে তা জানুন।', icon: BookOpenIcon, page: Page.SymptomAwarenessGuide },
     { id: 7, title: 'কমিউনিটি স্বাস্থ্য ইভেন্ট', description: 'টিকাদান শিবিরের মতো স্থানীয় স্বাস্থ্য ইভেন্টগুলি খুঁজুন এবং RSVP করুন।', icon: CalendarDaysIcon },
     { id: 8, title: 'স্বেচ্ছাসেবক কর্মী ডিরেক্টরি', description: 'গ্রাম বা দক্ষতা দ্বারা যাচাইকৃত কমিউনিটি স্বাস্থ্য কর্মীদের জন্য অনুসন্ধান করুন।', icon: ClipboardDocumentListIcon },
     { id: 9, title: 'স্বাস্থ্য ডেটা রপ্তানি', description: 'এনজিওগুলি স্বাস্থ্য পরিকল্পনার উন্নতির জন্য বেনামী প্রবণতা দেখতে পারে।', icon: ChartBarIcon },

@@ -227,7 +227,7 @@ const VoiceAssistantPage: React.FC = () => {
             {/* Header */}
             <header className="text-center p-6 border-b dark:border-slate-700">
                 <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-100">স্বাস্থ্য বন্ধু</h1>
-                <p className="text-stone-600 dark:text-stone-400">আপনার প্রশ্ন জিজ্ঞাসা করুন, আমি সাহায্য করতে এখানে আছি।</p>
+                <p className="mt-2 text-stone-600 dark:text-stone-400">আপনার প্রশ্ন জিজ্ঞাসা করুন, আমি সাহায্য করতে এখানে আছি।</p>
             </header>
 
             {/* Chat Area */}

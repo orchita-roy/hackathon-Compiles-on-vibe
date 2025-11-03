@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Page } from '../types';
-import { HeartIcon, MapIcon, MicrophoneIcon, ShieldCheckIcon, SunIcon, UsersIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon } from '../components/IconComponents';
+import { HeartIcon, MapIcon, MicrophoneIcon, SunIcon, UsersIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, QuestionMarkCircleIcon } from '../components/IconComponents';
 import HeroSlider from '../components/HeroSlider';
 
 interface HomePageProps {
@@ -12,9 +13,9 @@ const HomePage: React.FC<HomePageProps> = ({ navigateTo }) => {
     { name: 'মানসিক স্বাস্থ্য পরীক্ষা', icon: ClipboardDocumentCheckIcon, description: 'প্রতিদিন আপনার মানসিক অবস্থা ট্র্যাক করুন।', page: Page.MentalHealthCheck },
     { name: 'কমিউনিটি স্বাস্থ্য মানচিত্র', icon: MapIcon, description: 'স্থানীয় স্বাস্থ্য পরিষেবা খুঁজুন।', page: Page.CommunityHealthMap },
     { name: 'ভয়েস-ফার্স্ট সহকারী', icon: MicrophoneIcon, description: 'আপনার ভয়েসের মাধ্যমে সহায়তা পান।', page: Page.VoiceAssistant },
-    { name: 'ঋতুভিত্তিক স্বাস্থ্য টিপস', icon: SunIcon, description: 'সারা বছর সুস্থ থাকুন।' },
+    { name: 'ঋতুভিত্তিক স্বাস্থ্য টিপস', icon: SunIcon, description: 'সারা বছর সুস্থ থাকুন।', page: Page.SeasonalHealthTips },
     { name: 'স্বেচ্ছাসেবক ডিরেক্টরি', icon: ClipboardDocumentListIcon, description: 'স্বাস্থ্যকর্মীদের সাথে সংযোগ স্থাপন করুন।' },
-    { name: 'নামবিহীন সাহায্যের অনুরোধ', icon: ShieldCheckIcon, description: 'গোপনে সাহায্য প্রার্থনা করুন।' },
+    { name: 'নামবিহীন সাহায্যের অনুরোধ', icon: QuestionMarkCircleIcon, description: 'গোপনে সাহায্য প্রার্থনা করুন।', page: Page.AnonymousHelpRequest },
   ];
 
   return (
