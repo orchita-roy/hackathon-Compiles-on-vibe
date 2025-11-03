@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ANCVisit, Vaccination } from '../types';
-import { LockClosedIcon, CheckCircleIcon, ArrowDownTrayIcon, UserGroupIcon } from '../components/IconComponents';
+import { LockClosedIcon, PhoneIcon, ArrowDownTrayIcon } from '../components/IconComponents';
 
 const ANC_STORAGE_KEY = 'ancTrackerData';
 const VACCINATION_STORAGE_KEY = 'vaccinationTrackerData';
+const DOCTOR_PHONE_KEY = 'savedDoctorNumber';
 
 const epiSchedule = [
   { id: 'bcg', name: 'বিসিজি এবং ওপিভি-০', weeks: 0, recommendedAge: 'জন্মের সময়' },
@@ -33,6 +34,11 @@ const MaternalAndChildHealthPage: React.FC = () => {
     const [dob, setDob] = useState('');
     const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
 
+    // Call Doctor Modal State
+    const [showCallModal, setShowCallModal] = useState(false);
+    const [doctorPhoneNumber, setDoctorPhoneNumber] = useState('');
+    const [savedDoctorNumber, setSavedDoctorNumber] = useState('');
+
     const [copySuccess, setCopySuccess] = useState('');
 
     // Load data from localStorage
@@ -49,6 +55,10 @@ const MaternalAndChildHealthPage: React.FC = () => {
                 const data = JSON.parse(savedVaccination);
                 setDob(data.dob || '');
                 setVaccinations(data.vaccinations || []);
+            }
+            const savedNumber = localStorage.getItem(DOCTOR_PHONE_KEY);
+            if (savedNumber) {
+                setSavedDoctorNumber(savedNumber);
             }
         } catch (error) {
             console.error("Failed to load tracker data from localStorage:", error);
@@ -105,6 +115,20 @@ const MaternalAndChildHealthPage: React.FC = () => {
         setVaccinations(updatedVaccinations);
         localStorage.setItem(VACCINATION_STORAGE_KEY, JSON.stringify({ dob, vaccinations: updatedVaccinations }));
     };
+
+    const handleCall = (number: string) => {
+        if (number.trim()) {
+            window.location.href = `tel:${number.trim()}`;
+        }
+    };
+
+    const handleSaveNumber = () => {
+        if (doctorPhoneNumber.trim()) {
+            localStorage.setItem(DOCTOR_PHONE_KEY, doctorPhoneNumber.trim());
+            setSavedDoctorNumber(doctorPhoneNumber.trim());
+            setDoctorPhoneNumber('');
+        }
+    };
     
     const handleExport = async () => {
         let textToCopy = '';
@@ -133,97 +157,165 @@ const MaternalAndChildHealthPage: React.FC = () => {
     };
     
     return (
-        <div className="bg-stone-50 dark:bg-slate-900 py-12 min-h-[calc(100vh-8rem)]">
-            <div className="container mx-auto px-6">
-                <header className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-stone-800 dark:text-stone-100">মাতৃ ও শিশু স্বাস্থ্য ট্র্যাকার</h1>
-                    <p className="mt-4 text-lg text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
-                        প্রসবপূর্ব যত্ন এবং শিশু টিকাদানের গুরুত্বপূর্ণ তারিখগুলি ট্র্যাক করুন।
-                    </p>
-                </header>
+        <>
+            <div className="bg-stone-50 dark:bg-slate-900 py-12 min-h-[calc(100vh-8rem)]">
+                <div className="container mx-auto px-6">
+                    <header className="text-center mb-12">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-stone-800 dark:text-stone-100">মাতৃ ও শিশু স্বাস্থ্য ট্র্যাকার</h1>
+                        <p className="mt-4 text-lg text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
+                            প্রসবপূর্ব যত্ন এবং শিশু টিকাদানের গুরুত্বপূর্ণ তারিখগুলি ট্র্যাক করুন।
+                        </p>
+                    </header>
 
-                <section className="max-w-4xl mx-auto">
-                    <div className="mb-8 flex justify-center border-b border-stone-200 dark:border-slate-700">
-                        <button onClick={() => setActiveTab('anc')} className={`px-6 py-3 font-medium transition-colors ${activeTab === 'anc' ? 'border-b-2 border-teal-500 text-teal-600 dark:text-teal-400' : 'text-stone-500 hover:text-teal-600'}`}>
-                            গর্ভাবস্থা ট্র্যাকার
-                        </button>
-                        <button onClick={() => setActiveTab('vaccination')} className={`px-6 py-3 font-medium transition-colors ${activeTab === 'vaccination' ? 'border-b-2 border-teal-500 text-teal-600 dark:text-teal-400' : 'text-stone-500 hover:text-teal-600'}`}>
-                            টিকা ট্র্যাকার
-                        </button>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 sm:p-8">
-                        <div className="mb-6 p-4 bg-stone-100 dark:bg-slate-700 rounded-lg flex items-center space-x-3">
-                            <LockClosedIcon className="h-8 w-8 text-teal-500 flex-shrink-0" />
-                            <div>
-                                <h3 className="font-bold text-stone-800 dark:text-white">আপনার ডেটা ব্যক্তিগত</h3>
-                                <p className="text-sm text-stone-600 dark:text-stone-400">সমস্ত তথ্য শুধুমাত্র আপনার ডিভাইসে সংরক্ষণ করা হয় এবং কারো সাথে শেয়ার করা হয় না।</p>
+                    <section className="max-w-4xl mx-auto">
+                         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 sm:p-8">
+                            <div className="mb-6 p-4 bg-stone-100 dark:bg-slate-700 rounded-lg flex items-center space-x-3">
+                                <LockClosedIcon className="h-8 w-8 text-teal-500 flex-shrink-0" />
+                                <div>
+                                    <h3 className="font-bold text-stone-800 dark:text-white">আপনার ডেটা ব্যক্তিগত</h3>
+                                    <p className="text-sm text-stone-600 dark:text-stone-400">সমস্ত তথ্য শুধুমাত্র আপনার ডিভাইসে সংরক্ষণ করা হয় এবং কারো সাথে শেয়ার করা হয় না।</p>
+                                </div>
                             </div>
+
+                            <div className="mb-8 text-center border-t border-b border-stone-200 dark:border-slate-700 py-6">
+                                <button onClick={() => setShowCallModal(true)} className="inline-flex items-center px-6 py-3 bg-teal-600 text-white font-bold rounded-full shadow-lg hover:bg-teal-700 transition-transform transform hover:scale-105">
+                                    <PhoneIcon className="h-6 w-6 mr-3" />
+                                    ডাক্তারকে কল করুন
+                                </button>
+                            </div>
+
+                            <div className="flex justify-center border-b border-stone-200 dark:border-slate-700 mb-6">
+                                <button onClick={() => setActiveTab('anc')} className={`px-6 py-3 font-medium transition-colors ${activeTab === 'anc' ? 'border-b-2 border-teal-500 text-teal-600 dark:text-teal-400' : 'text-stone-500 hover:text-teal-600'}`}>
+                                    গর্ভাবস্থা ট্র্যাকার
+                                </button>
+                                <button onClick={() => setActiveTab('vaccination')} className={`px-6 py-3 font-medium transition-colors ${activeTab === 'vaccination' ? 'border-b-2 border-teal-500 text-teal-600 dark:text-teal-400' : 'text-stone-500 hover:text-teal-600'}`}>
+                                    টিকা ট্র্যাকার
+                                </button>
+                            </div>
+
+                            {activeTab === 'anc' && (
+                                <div>
+                                    <h2 className="text-2xl font-bold text-stone-800 dark:text-white mb-4">প্রসবপূর্ব যত্ন (ANC) সময়সূচী</h2>
+                                    <div className="mb-6">
+                                        <label htmlFor="dueDate" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">সম্ভাব্য প্রসবের তারিখ লিখুন</label>
+                                        <input type="date" id="dueDate" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full max-w-xs px-3 py-2 border border-stone-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-teal-500 bg-white dark:bg-slate-700"/>
+                                    </div>
+                                    {dueDate && ancVisits.length > 0 && (
+                                        <ul className="space-y-3">
+                                            {ancVisits.map(visit => (
+                                                <li key={visit.id} className="flex items-center justify-between p-3 rounded-md bg-stone-50 dark:bg-slate-700/50">
+                                                    <div>
+                                                        <p className="font-bold text-stone-800 dark:text-stone-200">{visit.title}</p>
+                                                        <p className="text-sm text-stone-600 dark:text-stone-400">প্রস্তাবিত তারিখ: {visit.recommendedDate}</p>
+                                                    </div>
+                                                    <button onClick={() => handleToggleANCVisit(visit.id)} className={`px-4 py-1 text-sm rounded-full transition-colors ${visit.completed ? 'bg-green-500 text-white' : 'bg-stone-200 dark:bg-slate-600 hover:bg-stone-300'}`}>
+                                                        {visit.completed ? 'সম্পন্ন' : 'বাকি'}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'vaccination' && (
+                                <div>
+                                    <h2 className="text-2xl font-bold text-stone-800 dark:text-white mb-4">শিশু টিকা সময়সূচী</h2>
+                                    <div className="mb-6">
+                                        <label htmlFor="dob" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">শিশুর জন্ম তারিখ লিখুন</label>
+                                        <input type="date" id="dob" value={dob} onChange={e => setDob(e.target.value)} className="w-full max-w-xs px-3 py-2 border border-stone-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-teal-500 bg-white dark:bg-slate-700"/>
+                                    </div>
+                                    {dob && vaccinations.length > 0 && (
+                                        <ul className="space-y-3">
+                                            {vaccinations.map(vac => (
+                                                <li key={vac.id} className="flex items-center justify-between p-3 rounded-md bg-stone-50 dark:bg-slate-700/50">
+                                                    <div>
+                                                        <p className="font-bold text-stone-800 dark:text-stone-200">{vac.name}</p>
+                                                        <p className="text-sm text-stone-600 dark:text-stone-400">{vac.recommendedAge} (প্রস্তাবিত তারিখ: {vac.dueDate})</p>
+                                                    </div>
+                                                    <button onClick={() => handleToggleVaccination(vac.id)} className={`px-4 py-1 text-sm rounded-full transition-colors ${vac.completed ? 'bg-green-500 text-white' : 'bg-stone-200 dark:bg-slate-600 hover:bg-stone-300'}`}>
+                                                        {vac.completed ? 'সম্পন্ন' : 'বাকি'}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {( (activeTab === 'anc' && dueDate) || (activeTab === 'vaccination' && dob) ) && (
+                                <div className="mt-8 border-t border-stone-200 dark:border-slate-700 pt-6 text-center">
+                                    <button onClick={handleExport} className="inline-flex items-center px-6 py-2 bg-slate-600 text-white font-bold rounded-full shadow hover:bg-slate-700 transition-colors">
+                                        <ArrowDownTrayIcon className="h-5 w-5 mr-2"/>
+                                        সময়সূচী এক্সপোর্ট করুন
+                                    </button>
+                                    {copySuccess && <p className="text-green-600 dark:text-green-400 text-sm mt-3">{copySuccess}</p>}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            {showCallModal && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4 transition-opacity" onClick={() => setShowCallModal(false)}>
+                    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md p-6 transform transition-transform" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-stone-800 dark:text-white mb-4">ডাক্তারকে কল করুন</h3>
+                        
+                        <div className="mb-6">
+                            <h4 className="text-md font-semibold text-stone-700 dark:text-stone-300 mb-2">সংরক্ষিত নম্বর</h4>
+                            {savedDoctorNumber ? (
+                                <div className="flex justify-between items-center bg-stone-100 dark:bg-slate-700 p-3 rounded-lg">
+                                    <span className="font-mono text-lg text-stone-800 dark:text-stone-200">{savedDoctorNumber}</span>
+                                    <button onClick={() => handleCall(savedDoctorNumber)} className="inline-flex items-center px-4 py-2 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors">
+                                        <PhoneIcon className="h-5 w-5 mr-2" />
+                                        কল করুন
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="text-stone-500 dark:text-stone-400 text-sm py-3">কোনো নম্বর সংরক্ষণ করা নেই।</p>
+                            )}
+                        </div>
+                        
+                        <div className="mb-4">
+                            <label htmlFor="doctorPhone" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
+                                নতুন নম্বর লিখুন বা পরিবর্তন করুন
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="doctorPhone"
+                                value={doctorPhoneNumber}
+                                onChange={(e) => setDoctorPhoneNumber(e.target.value)}
+                                className="w-full px-3 py-2 border border-stone-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:bg-slate-700 text-stone-900 dark:text-stone-200"
+                                placeholder="e.g., 01712345678"
+                            />
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button 
+                                onClick={() => handleCall(doctorPhoneNumber)}
+                                disabled={!doctorPhoneNumber.trim()}
+                                className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 disabled:bg-green-300 transition-colors"
+                            >
+                                <PhoneIcon className="h-5 w-5 mr-2" />
+                                এই নম্বরে কল করুন
+                            </button>
+                            <button 
+                                onClick={handleSaveNumber}
+                                disabled={!doctorPhoneNumber.trim()}
+                                className="w-full inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white font-bold rounded-full hover:bg-teal-700 disabled:bg-teal-300 transition-colors"
+                            >
+                                নম্বর সংরক্ষণ করুন
+                            </button>
                         </div>
 
-                        {activeTab === 'anc' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-stone-800 dark:text-white mb-4">প্রসবপূর্ব যত্ন (ANC) সময়সূচী</h2>
-                                <div className="mb-6">
-                                    <label htmlFor="dueDate" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">সম্ভাব্য প্রসবের তারিখ লিখুন</label>
-                                    <input type="date" id="dueDate" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full max-w-xs px-3 py-2 border border-stone-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-teal-500 bg-white dark:bg-slate-700"/>
-                                </div>
-                                {dueDate && ancVisits.length > 0 && (
-                                    <ul className="space-y-3">
-                                        {ancVisits.map(visit => (
-                                            <li key={visit.id} className="flex items-center justify-between p-3 rounded-md bg-stone-50 dark:bg-slate-700/50">
-                                                <div>
-                                                    <p className="font-bold text-stone-800 dark:text-stone-200">{visit.title}</p>
-                                                    <p className="text-sm text-stone-600 dark:text-stone-400">প্রস্তাবিত তারিখ: {visit.recommendedDate}</p>
-                                                </div>
-                                                <button onClick={() => handleToggleANCVisit(visit.id)} className={`px-4 py-1 text-sm rounded-full transition-colors ${visit.completed ? 'bg-green-500 text-white' : 'bg-stone-200 dark:bg-slate-600 hover:bg-stone-300'}`}>
-                                                    {visit.completed ? 'সম্পন্ন' : 'বাকি'}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'vaccination' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-stone-800 dark:text-white mb-4">শিশু টিকা সময়সূচী</h2>
-                                <div className="mb-6">
-                                    <label htmlFor="dob" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">শিশুর জন্ম তারিখ লিখুন</label>
-                                    <input type="date" id="dob" value={dob} onChange={e => setDob(e.target.value)} className="w-full max-w-xs px-3 py-2 border border-stone-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-teal-500 bg-white dark:bg-slate-700"/>
-                                </div>
-                                {dob && vaccinations.length > 0 && (
-                                    <ul className="space-y-3">
-                                        {vaccinations.map(vac => (
-                                            <li key={vac.id} className="flex items-center justify-between p-3 rounded-md bg-stone-50 dark:bg-slate-700/50">
-                                                <div>
-                                                    <p className="font-bold text-stone-800 dark:text-stone-200">{vac.name}</p>
-                                                    <p className="text-sm text-stone-600 dark:text-stone-400">{vac.recommendedAge} (প্রস্তাবিত তারিখ: {vac.dueDate})</p>
-                                                </div>
-                                                 <button onClick={() => handleToggleVaccination(vac.id)} className={`px-4 py-1 text-sm rounded-full transition-colors ${vac.completed ? 'bg-green-500 text-white' : 'bg-stone-200 dark:bg-slate-600 hover:bg-stone-300'}`}>
-                                                    {vac.completed ? 'সম্পন্ন' : 'বাকি'}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        )}
-                        
-                        {( (activeTab === 'anc' && dueDate) || (activeTab === 'vaccination' && dob) ) && (
-                            <div className="mt-8 border-t border-stone-200 dark:border-slate-700 pt-6 text-center">
-                                <button onClick={handleExport} className="inline-flex items-center px-6 py-2 bg-slate-600 text-white font-bold rounded-full shadow hover:bg-slate-700 transition-colors">
-                                    <ArrowDownTrayIcon className="h-5 w-5 mr-2"/>
-                                    সময়সূচী এক্সপোর্ট করুন
-                                </button>
-                                {copySuccess && <p className="text-green-600 dark:text-green-400 text-sm mt-3">{copySuccess}</p>}
-                            </div>
-                        )}
+                        <div className="mt-6 text-right">
+                             <button onClick={() => setShowCallModal(false)} className="px-4 py-2 bg-stone-200 dark:bg-slate-600 text-stone-800 dark:text-stone-200 font-medium rounded-md hover:bg-stone-300 dark:hover:bg-slate-500 transition-colors">বন্ধ করুন</button>
+                        </div>
                     </div>
-                </section>
-            </div>
-        </div>
+                </div>
+            )}
+        </>
     );
 };
 
