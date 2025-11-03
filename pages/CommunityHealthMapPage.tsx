@@ -23,7 +23,7 @@ const CommunityHealthMapPage: React.FC = () => {
       const response = await findNearbyPlaces(query);
       setResult(response);
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError('একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -37,9 +37,9 @@ const CommunityHealthMapPage: React.FC = () => {
       <div className="container mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-gray-100">Community Health Map</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-gray-100">কমিউনিটি স্বাস্থ্য মানচিত্র</h1>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Ask questions to find clinics, pharmacies, and health workers in the Comilla, Bangladesh region.
+            কুমিল্লা, বাংলাদেশ অঞ্চলের ক্লিনিক, ফার্মেসি এবং স্বাস্থ্যকর্মী খুঁজে পেতে প্রশ্ন জিজ্ঞাসা করুন।
           </p>
         </div>
 
@@ -50,7 +50,7 @@ const CommunityHealthMapPage: React.FC = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g., 'Where is the nearest clinic?'"
+              placeholder="যেমন, 'নিকটতম ক্লিনিক কোথায়?'"
               className="flex-grow px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               disabled={isLoading}
             />
@@ -59,7 +59,7 @@ const CommunityHealthMapPage: React.FC = () => {
               disabled={isLoading}
               className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-full shadow-lg hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors"
             >
-              {isLoading ? 'Searching...' : 'Search'}
+              {isLoading ? 'অনুসন্ধান করা হচ্ছে...' : 'অনুসন্ধান'}
             </button>
           </form>
         </div>
@@ -78,7 +78,7 @@ const CommunityHealthMapPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Locations List */}
                     <div className="md:col-span-1 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md h-[60vh] overflow-y-auto">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Relevant Locations</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">প্রাসঙ্গিক অবস্থান</h2>
                         <ul className="space-y-3">
                             {mapChunks.map((chunk, index) => (
                                 <li key={index}>
@@ -112,14 +112,14 @@ const CommunityHealthMapPage: React.FC = () => {
                             </iframe>
                         ) : (
                             <div className="flex items-center justify-center h-full rounded-md bg-gray-50 dark:bg-gray-700">
-                                <p className="text-gray-500 dark:text-gray-400 text-lg">Select a location from the list to view it on the map.</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg">মানচিত্রে দেখার জন্য তালিকা থেকে একটি অবস্থান নির্বাচন করুন।</p>
                             </div>
                         )}
                     </div>
                 </div>
             ) : (
                 <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md text-center">
-                    <p className="text-gray-700 dark:text-gray-300">No locations found. Please try a different search term.</p>
+                    <p className="text-gray-700 dark:text-gray-300">কোনো অবস্থান পাওয়া যায়নি। অনুগ্রহ করে একটি ভিন্ন অনুসন্ধান শব্দ দিয়ে চেষ্টা করুন।</p>
                 </div>
             )
           )}

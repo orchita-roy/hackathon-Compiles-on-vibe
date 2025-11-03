@@ -3,16 +3,16 @@ import { Mission } from '../types';
 import { HeartIcon, MapIcon, ShieldCheckIcon, SunIcon, UsersIcon, MicrophoneIcon } from '../components/IconComponents';
 
 const missions: Mission[] = [
-    { id: 1, title: 'Mental Health Check-In', description: 'Log your mood daily to understand your mental well-being.', icon: HeartIcon },
-    { id: 2, title: 'Community Health Map', description: 'Find nearby clinics, pharmacies, and health workers, even offline.', icon: MapIcon },
-    { id: 3, title: 'Anonymous Help Request', description: 'Send a request for mental health support privately and securely.', icon: ShieldCheckIcon },
-    { id: 4, title: 'Seasonal Health Tips', description: 'Get relevant health advice for monsoon, winter, and summer.', icon: SunIcon },
-    { id: 5, title: 'Maternal & Child Health', description: 'Track antenatal care and vaccination schedules with reminders.', icon: HeartIcon },
-    { id: 6, title: 'Symptom Awareness Guide', description: 'Understand symptoms and learn when to seek professional help.', icon: HeartIcon },
-    { id: 7, title: 'Community Health Events', description: 'Find and RSVP to local health events like vaccination camps.', icon: UsersIcon },
-    { id: 8, title: 'Volunteer Worker Directory', description: 'Search for verified Community Health Workers by village or skill.', icon: UsersIcon },
-    { id: 9, title: 'Health Data Export', description: 'NGOs can view anonymized trends to improve health planning.', icon: UsersIcon },
-    { id: 10, title: 'Voice-First Health Assistant', description: 'Use your voice to ask for health information, designed for all literacy levels.', icon: MicrophoneIcon },
+    { id: 1, title: 'মানসিক স্বাস্থ্য পরীক্ষা', description: 'আপনার মানসিক সুস্থতা বুঝতে প্রতিদিন আপনার মেজাজ লগ করুন।', icon: HeartIcon },
+    { id: 2, title: 'কমিউনিটি স্বাস্থ্য মানচিত্র', description: 'অফলাইনেও কাছাকাছি ক্লিনিক, ফার্মেসি এবং স্বাস্থ্যকর্মী খুঁজুন।', icon: MapIcon },
+    { id: 3, title: 'নামবিহীন সাহায্যের অনুরোধ', description: 'ব্যক্তিগতভাবে এবং নিরাপদে মানসিক স্বাস্থ্য সহায়তার জন্য একটি অনুরোধ পাঠান।', icon: ShieldCheckIcon },
+    { id: 4, title: 'ঋতুভিত্তিক স্বাস্থ্য টিপস', description: 'বর্ষা, শীত এবং গ্রীষ্মের জন্য প্রাসঙ্গিক স্বাস্থ্য পরামর্শ পান।', icon: SunIcon },
+    { id: 5, title: 'মাতৃ ও শিশু স্বাস্থ্য', description: 'অনুস্মারক সহ প্রসবপূর্ব যত্ন এবং টিকাদানের সময়সূচী ট্র্যাক করুন।', icon: HeartIcon },
+    { id: 6, title: 'উপসর্গ সচেতনতা নির্দেশিকা', description: 'উপসর্গগুলি বুঝুন এবং কখন পেশাদার সাহায্য নিতে হবে তা জানুন।', icon: HeartIcon },
+    { id: 7, title: 'কমিউনিটি স্বাস্থ্য ইভেন্ট', description: 'টিকাদান শিবিরের মতো স্থানীয় স্বাস্থ্য ইভেন্টগুলি খুঁজুন এবং RSVP করুন।', icon: UsersIcon },
+    { id: 8, title: 'স্বেচ্ছাসেবক কর্মী ডিরেক্টরি', description: 'গ্রাম বা দক্ষতা দ্বারা যাচাইকৃত কমিউনিটি স্বাস্থ্য কর্মীদের জন্য অনুসন্ধান করুন।', icon: UsersIcon },
+    { id: 9, title: 'স্বাস্থ্য ডেটা রপ্তানি', description: 'এনজিওগুলি স্বাস্থ্য পরিকল্পনার উন্নতির জন্য বেনামী প্রবণতা দেখতে পারে।', icon: UsersIcon },
+    { id: 10, title: 'ভয়েস-ফার্স্ট স্বাস্থ্য সহকারী', description: 'সকল স্তরের সাক্ষরতার জন্য ডিজাইন করা স্বাস্থ্য তথ্যের জন্য আপনার ভয়েস ব্যবহার করুন।', icon: MicrophoneIcon },
 ];
 
 const MissionsPage: React.FC = () => {
@@ -21,9 +21,9 @@ const MissionsPage: React.FC = () => {
             <div className="container mx-auto px-6">
                 {/* Header Section */}
                 <header className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-gray-100">Our Missions</h1>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-gray-100">আমাদের মিশন</h1>
                     <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                        We are dedicated to improving community health through ten focused missions, addressing mental, maternal, and preventive care.
+                        আমরা মানসিক, মাতৃ এবং প্রতিরোধমূলক যত্ন সহ দশটি কেন্দ্রবিন্দু মিশনের মাধ্যমে সম্প্রদায়ের স্বাস্থ্যের উন্নতিতে নিবেদিত।
                     </p>
                 </header>
 
@@ -44,8 +44,8 @@ const MissionsPage: React.FC = () => {
 
                 {/* CTA Section */}
                 <section className="text-center mt-20">
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Join Us in Building a Healthier Community</h2>
-                    <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Explore each mission to see how you can benefit and contribute.</p>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">একটি স্বাস্থ্যকর সম্প্রদায় গঠনে আমাদের সাথে যোগ দিন</h2>
+                    <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">আপনি কীভাবে উপকৃত হতে পারেন এবং অবদান রাখতে পারেন তা দেখতে প্রতিটি মিশন অন্বেষণ করুন।</p>
                 </section>
             </div>
         </div>

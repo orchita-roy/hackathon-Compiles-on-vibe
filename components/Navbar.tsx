@@ -11,10 +11,10 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ navigateTo, currentPage, theme, toggleTheme }) => {
   const navItems = [
-    { page: Page.Home, label: 'Home' },
-    { page: Page.Missions, label: 'Missions' },
-    { page: Page.CommunityHealthMap, label: 'Health Map' },
-    { page: Page.VoiceAssistant, label: 'Voice Assistant' },
+    { page: Page.Home, label: 'হোম' },
+    { page: Page.Missions, label: 'মিশন' },
+    { page: Page.CommunityHealthMap, label: 'স্বাস্থ্য মানচিত্র' },
+    { page: Page.VoiceAssistant, label: 'ভয়েস সহকারী' },
   ];
 
   return (

@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
             <HeartIcon className="h-8 w-8 text-emerald-500" />
             <span className="text-xl font-bold text-gray-200 dark:text-gray-100">স্বাস্থ্য বন্ধু</span>
           </div>
-          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} স্বাস্থ্য বন্ধু. All rights reserved.</p>
+          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} স্বাস্থ্য বন্ধু। সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
     </footer>
