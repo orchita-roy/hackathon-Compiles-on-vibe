@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { HealthTopic } from '../types';
 import { SpeakerWaveIcon, ExclamationTriangleIcon, SparklesIcon, ChevronDownIcon, BookOpenIcon, CheckCircleIcon, ShareIcon } from '../components/IconComponents';
+import { getShareableUrl } from '../utils/shareUtils';
+import { generateSpeech } from '../services/geminiService';
+import { decode, decodeAudioData } from '../utils/audioUtils';
 
 const healthTopicsData: HealthTopic[] = [
     {
@@ -83,17 +86,64 @@ const SymptomAwarenessGuidePage: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<HealthTopic['category'] | 'সব'>('সব');
     const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
     const [copySuccessMessage, setCopySuccessMessage] = useState<{ topic: string, message: string } | null>(null);
+    const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+    
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-    const handleReadAloud = (textsToRead: string[]) => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
+    const stopCurrentPlayback = () => {
+        if (audioSourceRef.current) {
+            audioSourceRef.current.stop();
+            audioSourceRef.current.disconnect();
+            audioSourceRef.current = null;
+        }
+        setCurrentlyPlaying(null);
+    };
+
+    const handleReadAloud = async (sectionId: string, textsToRead: string[]) => {
+        if (currentlyPlaying === sectionId) {
+            stopCurrentPlayback();
+            return;
+        }
+
+        stopCurrentPlayback();
+
+        try {
+            setCurrentlyPlaying(sectionId);
+
+            if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+            }
+            await audioContextRef.current.resume();
+            
             const fullText = textsToRead.join('. ');
-            const utterance = new SpeechSynthesisUtterance(fullText);
-            utterance.lang = 'bn-BD';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert('দুঃখিত, আপনার ব্রাউজার এই বৈশিষ্ট্যটি সমর্থন করে না।');
+            const base64Audio = await generateSpeech(fullText);
+
+            if (base64Audio && audioContextRef.current) {
+                const audioData = decode(base64Audio);
+                const audioBuffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
+
+                const source = audioContextRef.current.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContextRef.current.destination);
+                source.start(0);
+
+                audioSourceRef.current = source;
+
+                source.onended = () => {
+                    if (audioSourceRef.current === source) {
+                        setCurrentlyPlaying(null);
+                        audioSourceRef.current = null;
+                    }
+                };
+            } else {
+                throw new Error('Failed to generate or decode audio.');
+            }
+        } catch (error) {
+            console.error('Error handling audio playback:', error);
+            alert('দুঃখিত, অডিও চালাতে একটি সমস্যা হয়েছে।');
+            setCurrentlyPlaying(null);
         }
     };
 
@@ -107,6 +157,7 @@ const SymptomAwarenessGuidePage: React.FC = () => {
         const shareData = {
             title: title,
             text: fullText,
+            url: getShareableUrl(),
         };
 
         if (navigator.share) {
@@ -116,18 +167,22 @@ const SymptomAwarenessGuidePage: React.FC = () => {
                 console.error("Share failed (user might have cancelled):", err);
             }
         } else {
-            try {
-                await navigator.clipboard.writeText(fullText);
-                setCopySuccessMessage({ topic: topic.title, message: 'ক্লিপবোর্ডে কপি করা হয়েছে!' });
-                setTimeout(() => setCopySuccessMessage(null), 3000);
-            } catch (err) {
-                setCopySuccessMessage({ topic: topic.title, message: 'কপি করতে ব্যর্থ হয়েছে।' });
-                setTimeout(() => setCopySuccessMessage(null), 3000);
-            }
+            // Fallback for browsers that don't support navigator.share
+            const subject = encodeURIComponent(shareData.title);
+            const body = encodeURIComponent(shareData.text);
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+
+            // Provide feedback
+            setCopySuccessMessage({ topic: topic.title, message: 'ইমেইল ক্লায়েন্ট খোলা হচ্ছে...' });
+            setTimeout(() => setCopySuccessMessage(null), 3000);
         }
     };
 
     const toggleTopic = (title: string) => {
+        if (expandedTopic !== title && currentlyPlaying) {
+            stopCurrentPlayback();
+        }
         setExpandedTopic(prev => (prev === title ? null : title));
     };
 
@@ -179,8 +234,19 @@ const SymptomAwarenessGuidePage: React.FC = () => {
                                                     <ExclamationTriangleIcon className="h-5 w-5 mr-2" />
                                                     কখন চিন্তা করবেন
                                                 </h3>
-                                                <button onClick={() => handleReadAloud(['কখন চিন্তা করবেন', ...topic.worry])} className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700" aria-label="পড়ে শোনান">
-                                                    <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                <button 
+                                                    onClick={() => handleReadAloud(`${topic.title}-worry`, ['কখন চিন্তা করবেন', ...topic.worry])} 
+                                                    className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700"
+                                                    aria-label="পড়ে শোনান"
+                                                    disabled={currentlyPlaying !== null && currentlyPlaying !== `${topic.title}-worry`}
+                                                >
+                                                    {currentlyPlaying === `${topic.title}-worry` ? (
+                                                        <div className="animate-pulse">
+                                                            <SpeakerWaveIcon className="h-5 w-5 text-teal-500" />
+                                                        </div>
+                                                    ) : (
+                                                        <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                    )}
                                                 </button>
                                             </div>
                                             <ul className="list-disc list-inside space-y-1 text-stone-600 dark:text-stone-400">
@@ -195,8 +261,19 @@ const SymptomAwarenessGuidePage: React.FC = () => {
                                                     <CheckCircleIcon className="h-5 w-5 mr-2" />
                                                     কী করণীয়
                                                 </h3>
-                                                 <button onClick={() => handleReadAloud(['কী করণীয়', ...topic.dos])} className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700" aria-label="পড়ে শোনান">
-                                                    <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                 <button 
+                                                    onClick={() => handleReadAloud(`${topic.title}-dos`, ['কী করণীয়', ...topic.dos])} 
+                                                    className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700" 
+                                                    aria-label="পড়ে শোনান"
+                                                    disabled={currentlyPlaying !== null && currentlyPlaying !== `${topic.title}-dos`}
+                                                >
+                                                    {currentlyPlaying === `${topic.title}-dos` ? (
+                                                        <div className="animate-pulse">
+                                                            <SpeakerWaveIcon className="h-5 w-5 text-teal-500" />
+                                                        </div>
+                                                    ) : (
+                                                        <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                    )}
                                                 </button>
                                             </div>
                                             <ul className="list-disc list-inside space-y-1 text-stone-600 dark:text-stone-400">
@@ -211,8 +288,19 @@ const SymptomAwarenessGuidePage: React.FC = () => {
                                                     <SparklesIcon className="h-5 w-5 mr-2" />
                                                     ভুল ধারণা এড়িয়ে চলুন
                                                 </h3>
-                                                <button onClick={() => handleReadAloud(['ভুল ধারণা এড়িয়ে চলুন', ...topic.myths.map(m => `ভুল ধারণা: ${m.myth}. বাস্তবতা: ${m.reality}`)])} className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700" aria-label="পড়ে শোনান">
-                                                    <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                <button 
+                                                    onClick={() => handleReadAloud(`${topic.title}-myths`, ['ভুল ধারণা এড়িয়ে চলুন', ...topic.myths.map(m => `ভুল ধারণা: ${m.myth}. বাস্তবতা: ${m.reality}`)])} 
+                                                    className="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-slate-700" 
+                                                    aria-label="পড়ে শোনান"
+                                                    disabled={currentlyPlaying !== null && currentlyPlaying !== `${topic.title}-myths`}
+                                                >
+                                                    {currentlyPlaying === `${topic.title}-myths` ? (
+                                                        <div className="animate-pulse">
+                                                            <SpeakerWaveIcon className="h-5 w-5 text-teal-500" />
+                                                        </div>
+                                                    ) : (
+                                                        <SpeakerWaveIcon className="h-5 w-5 text-stone-500" />
+                                                    )}
                                                 </button>
                                             </div>
                                             {topic.myths.map((item, i) => (

@@ -13,6 +13,8 @@ import AnonymousHelpRequestPage from './pages/AnonymousHelpRequestPage';
 import SeasonalHealthTipsPage from './pages/SeasonalHealthTipsPage';
 import MaternalAndChildHealthPage from './pages/MaternalAndChildHealthPage';
 import SymptomAwarenessGuidePage from './pages/SymptomAwarenessGuidePage';
+import CommunityHealthEventsPage from './pages/CommunityHealthEventsPage';
+import VolunteerDirectoryPage from './pages/VolunteerDirectoryPage';
 
 type Theme = 'light' | 'dark';
 
@@ -66,6 +68,10 @@ const App: React.FC = () => {
         return <MaternalAndChildHealthPage />;
       case Page.SymptomAwarenessGuide:
         return <SymptomAwarenessGuidePage />;
+      case Page.CommunityHealthEvents:
+        return <CommunityHealthEventsPage />;
+      case Page.VolunteerDirectory:
+        return <VolunteerDirectoryPage />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }

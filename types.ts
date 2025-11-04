@@ -1,4 +1,3 @@
-
 import { ComponentType } from 'react';
 
 export enum Page {
@@ -11,6 +10,8 @@ export enum Page {
   SeasonalHealthTips,
   MaternalAndChildHealth,
   SymptomAwarenessGuide,
+  CommunityHealthEvents,
+  VolunteerDirectory,
 }
 
 export interface Mission {
@@ -70,4 +71,39 @@ export interface HealthTopic {
   worry: string[];
   dos: string[];
   myths: { myth: string; reality: string }[];
+}
+
+export type EventCategory = 'টিকাদান' | 'রক্তদান' | 'মানসিক স্বাস্থ্য' | 'মাতৃস্বাস্থ্য' | 'ডায়াবেটিস';
+
+export interface CommunityHealthEvent {
+  id: string;
+  title: string;
+  description: string;
+  category: EventCategory;
+  date: string; // ISO string
+  time: string;
+  location: string;
+  organizer: string;
+  mapLink: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export type VolunteerSkill = 'প্রাথমিক চিকিৎসা' | 'মানসিক স্বাস্থ্য' | 'মাতৃস্বাস্থ্য' | 'দীর্ঘস্থায়ী রোগ';
+
+export interface Volunteer {
+    id: string;
+    name: string;
+    location: string;
+    skills: VolunteerSkill[];
+    phone: string;
+    whatsapp: boolean;
+    workingHours: string;
+    verified: boolean;
+    coordinates: {
+        lat: number;
+        lng: number;
+    };
 }

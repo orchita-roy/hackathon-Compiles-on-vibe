@@ -168,3 +168,33 @@ export const PhoneIcon: React.FC<{ className?: string }> = ({ className }) => (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
     </svg>
 );
+
+export const MagnifyingGlassIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    </svg>
+);
+
+export const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
+    </svg>
+);
+
+export const PhoneArrowUpRightIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6v6m0-6l-9 9M6.75 3v2.25M6.75 21v-2.25M3 12h2.25m13.5 0h2.25M9 21h6m-6-18h6" />
+    </svg>
+);
+
+export const BookmarkIcon: React.FC<{ className?: string, solid?: boolean }> = ({ className, solid }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill={solid ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+    </svg>
+);
+
+export const WhatsAppIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.36 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 6.45 17.5 2 12.04 2M12.04 20.13C10.56 20.13 9.12 19.75 7.85 19.03L7.42 18.78L4.27 19.6L5.17 16.54L4.9 16.11C4.11 14.81 3.71 13.33 3.71 11.91C3.71 7.36 7.45 3.62 12.04 3.62C16.63 3.62 20.37 7.36 20.37 11.91C20.37 16.46 16.63 20.13 12.04 20.13M17.48 14.53C17.23 14.41 16.03 13.81 15.78 13.72C15.54 13.63 15.36 13.58 15.18 13.88C15 14.18 14.5 14.73 14.33 14.91C14.15 15.09 13.98 15.11 13.73 15C13.48 14.88 12.63 14.6 11.63 13.7C10.82 12.98 10.28 12.14 10.13 11.89C9.99 11.64 10.1 11.5 10.23 11.36C10.35 11.24 10.5 11.05 10.65 10.88C10.8 10.71 10.85 10.59 10.98 10.34C11.1 10.09 11.05 9.87 11 9.73C10.94 9.58 10.39 8.18 10.16 7.63C9.94 7.08 9.72 7.15 9.56 7.14H9.08C8.86 7.14 8.59 7.21 8.37 7.46C8.15 7.71 7.55 8.26 7.55 9.43C7.55 10.61 8.39 11.75 8.54 11.93C8.68 12.11 10.15 14.43 12.45 15.3C14.75 16.18 14.75 15.82 15.03 15.78C15.31 15.74 16.35 15.19 16.55 14.58C16.75 13.97 16.75 13.48 16.68 13.36C16.6 13.24 16.48 13.19 16.23 13.08C15.98 12.96 17.73 14.65 17.48 14.53Z"></path>
+    </svg>
+);

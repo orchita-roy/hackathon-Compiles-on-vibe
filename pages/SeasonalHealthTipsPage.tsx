@@ -1,6 +1,8 @@
-
-import React, { useState, ComponentType } from 'react';
+import React, { useState, ComponentType, useRef } from 'react';
 import { SunIcon, ShareIcon, SpeakerWaveIcon, CloudRainIcon, SnowflakeIcon } from '../components/IconComponents';
+import { getShareableUrl } from '../utils/shareUtils';
+import { generateSpeech } from '../services/geminiService';
+import { decode, decodeAudioData } from '../utils/audioUtils';
 
 type Season = 'monsoon' | 'winter' | 'summer';
 
@@ -72,16 +74,62 @@ const seasonTabs: { id: Season; label: string; icon: ComponentType<{ className?:
 
 const SeasonalHealthTipsPage: React.FC = () => {
     const [activeSeason, setActiveSeason] = useState<Season>('monsoon');
+    const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
-    const handleReadAloud = (textToRead: string) => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(textToRead);
-            utterance.lang = 'bn-BD';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert('দুঃখিত, আপনার ব্রাউজার এই বৈশিষ্ট্যটি সমর্থন করে না।');
+    const stopCurrentPlayback = () => {
+        if (audioSourceRef.current) {
+            audioSourceRef.current.stop();
+            audioSourceRef.current.disconnect();
+            audioSourceRef.current = null;
+        }
+        setCurrentlyPlaying(null);
+    };
+
+    const handleReadAloud = async (tipTitle: string, textToRead: string) => {
+        if (currentlyPlaying === tipTitle) {
+            stopCurrentPlayback();
+            return;
+        }
+
+        stopCurrentPlayback();
+
+        try {
+            setCurrentlyPlaying(tipTitle);
+
+            if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+            }
+            await audioContextRef.current.resume();
+
+            const base64Audio = await generateSpeech(textToRead);
+
+            if (base64Audio && audioContextRef.current) {
+                const audioData = decode(base64Audio);
+                const audioBuffer = await decodeAudioData(audioData, audioContextRef.current, 24000, 1);
+
+                const source = audioContextRef.current.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContextRef.current.destination);
+                source.start(0);
+
+                audioSourceRef.current = source;
+
+                source.onended = () => {
+                    if (audioSourceRef.current === source) {
+                        setCurrentlyPlaying(null);
+                        audioSourceRef.current = null;
+                    }
+                };
+            } else {
+                throw new Error('Failed to generate or decode audio.');
+            }
+        } catch (error) {
+            console.error('Error handling audio playback:', error);
+            alert('দুঃখিত, অডিও চালাতে একটি সমস্যা হয়েছে।');
+            setCurrentlyPlaying(null);
         }
     };
 
@@ -89,7 +137,7 @@ const SeasonalHealthTipsPage: React.FC = () => {
         const shareData = {
             title: `স্বাস্থ্য বন্ধু টিপস: ${title}`,
             text: text,
-            url: window.location.href,
+            url: getShareableUrl(),
         };
         if (navigator.share) {
             try {
@@ -98,12 +146,11 @@ const SeasonalHealthTipsPage: React.FC = () => {
                 console.error("Share failed:", err);
             }
         } else {
-            try {
-                await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}`);
-                alert('টিপসটি ক্লিপবোর্ডে অনুলিপি করা হয়েছে!');
-            } catch (err) {
-                alert('দুঃখিত, এই টিপসটি শেয়ার করা যায়নি।');
-            }
+            const subject = encodeURIComponent(shareData.title);
+            const body = encodeURIComponent(shareData.text);
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+            alert('আপনার ইমেল ক্লায়েন্ট খোলা হচ্ছে...');
         }
     };
 
@@ -118,7 +165,6 @@ const SeasonalHealthTipsPage: React.FC = () => {
                 </header>
 
                 <section className="max-w-4xl mx-auto">
-                    {/* Season Tabs */}
                     <div className="mb-8 flex justify-center border-b border-stone-200 dark:border-slate-700">
                         {seasonTabs.map((tab) => (
                             <button
@@ -136,7 +182,6 @@ const SeasonalHealthTipsPage: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Tips Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {tipsData[activeSeason].map((tip, index) => (
                             <div key={index} className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 flex flex-col">
@@ -149,11 +194,18 @@ const SeasonalHealthTipsPage: React.FC = () => {
                                 <p className="text-stone-600 dark:text-stone-400 flex-grow mb-6">{tip.text}</p>
                                 <div className="flex justify-end space-x-2 mt-auto border-t border-stone-100 dark:border-slate-700 pt-4">
                                     <button
-                                        onClick={() => handleReadAloud(`${tip.title}। ${tip.text}`)}
-                                        className="p-2 rounded-full text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-slate-700 transition-colors"
+                                        onClick={() => handleReadAloud(tip.title, `${tip.title}। ${tip.text}`)}
+                                        className={`p-2 rounded-full text-stone-500 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-slate-700 transition-colors ${currentlyPlaying === tip.title ? 'bg-teal-100 dark:bg-slate-600' : ''}`}
                                         aria-label="পড়ে শোনান"
+                                        disabled={currentlyPlaying !== null && currentlyPlaying !== tip.title}
                                     >
-                                        <SpeakerWaveIcon className="h-6 w-6" />
+                                        {currentlyPlaying === tip.title ? (
+                                            <div className="animate-pulse">
+                                                <SpeakerWaveIcon className="h-6 w-6 text-teal-500" />
+                                            </div>
+                                        ) : (
+                                            <SpeakerWaveIcon className="h-6 w-6" />
+                                        )}
                                     </button>
                                     <button
                                         onClick={() => handleShare(tip.title, tip.text)}
