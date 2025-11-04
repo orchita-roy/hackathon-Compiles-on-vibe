@@ -1,11 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { HelpRequest } from '../types';
+import { HelpRequest, Notification } from '../types';
 import { LockClosedIcon, InformationCircleIcon } from '../components/IconComponents';
 
 const OFFLINE_QUEUE_KEY = 'anonymousHelpRequestQueue';
 
-const AnonymousHelpRequestPage: React.FC = () => {
+interface AnonymousHelpRequestPageProps {
+    addNotification: (message: string, type?: Notification['type']) => void;
+}
+
+const AnonymousHelpRequestPage: React.FC<AnonymousHelpRequestPageProps> = ({ addNotification }) => {
     const [message, setMessage] = useState('');
     const [contactInfo, setContactInfo] = useState('');
     const [consent, setConsent] = useState(false);
@@ -22,7 +26,7 @@ const AnonymousHelpRequestPage: React.FC = () => {
             const queue: HelpRequest[] = JSON.parse(queueString);
             if (queue.length === 0) return;
             
-            console.log(`Syncing ${queue.length} offline requests...`);
+            addNotification(`সিঙ্ক করা হচ্ছে ${queue.length} অফলাইন অনুরোধ...`, 'info');
             
             // Simulate sending each request
             const syncPromises = queue.map(async (request) => {
@@ -31,10 +35,13 @@ const AnonymousHelpRequestPage: React.FC = () => {
                 return request.id;
             });
 
-            await Promise.all(syncPromises);
-
-            localStorage.removeItem(OFFLINE_QUEUE_KEY);
-            console.log('Offline queue cleared.');
+            try {
+                await Promise.all(syncPromises);
+                localStorage.removeItem(OFFLINE_QUEUE_KEY);
+                addNotification('সমস্ত অফলাইন অনুরোধ সফলভাবে পাঠানো হয়েছে।', 'success');
+            } catch (e) {
+                addNotification('অফলাইন অনুরোধ সিঙ্ক করতে ব্যর্থ হয়েছে।', 'error');
+            }
         };
 
         window.addEventListener('online', syncOfflineRequests);
@@ -46,7 +53,7 @@ const AnonymousHelpRequestPage: React.FC = () => {
         return () => {
             window.removeEventListener('online', syncOfflineRequests);
         };
-    }, []);
+    }, [addNotification]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -72,9 +79,11 @@ const AnonymousHelpRequestPage: React.FC = () => {
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 console.log('Submitting request online:', newRequest);
                 setSubmissionStatus('success');
+                addNotification('আপনার সাহায্যের অনুরোধ সফলভাবে পাঠানো হয়েছে।', 'success');
             } catch (err) {
                 setSubmissionStatus('error');
                 setError('আপনার অনুরোধ পাঠাতে একটি সমস্যা হয়েছে।');
+                addNotification('সাহায্যের অনুরোধ পাঠাতে ব্যর্থ হয়েছে।', 'error');
             }
         } else {
             // User is offline, queue the request
@@ -83,6 +92,7 @@ const AnonymousHelpRequestPage: React.FC = () => {
             queue.push(newRequest);
             localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
             setSubmissionStatus('queued');
+            addNotification('আপনি অফলাইনে আছেন। সংযোগ ফিরে এলে আপনার অনুরোধ পাঠানো হবে।', 'info');
             console.log('Request queued for offline submission:', newRequest);
         }
 

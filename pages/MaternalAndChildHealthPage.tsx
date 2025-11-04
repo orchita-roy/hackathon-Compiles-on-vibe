@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ANCVisit, Vaccination } from '../types';
+import { ANCVisit, Vaccination, Notification } from '../types';
 import { LockClosedIcon, PhoneIcon, ArrowDownTrayIcon } from '../components/IconComponents';
 
 const ANC_STORAGE_KEY = 'ancTrackerData';
@@ -23,7 +23,11 @@ const ancScheduleTemplate = [
     { id: 'anc4', title: '৪র্থ চেক-আপ', weeksBeforeDue: 4, recommendedDate: 'গর্ভধারণের ৩৬ সপ্তাহে' },
 ];
 
-const MaternalAndChildHealthPage: React.FC = () => {
+interface MaternalAndChildHealthPageProps {
+    addNotification: (message: string, type?: Notification['type']) => void;
+}
+
+const MaternalAndChildHealthPage: React.FC<MaternalAndChildHealthPageProps> = ({ addNotification }) => {
     const [activeTab, setActiveTab] = useState<'anc' | 'vaccination'>('anc');
     
     // ANC State
@@ -38,8 +42,6 @@ const MaternalAndChildHealthPage: React.FC = () => {
     const [showCallModal, setShowCallModal] = useState(false);
     const [doctorPhoneNumber, setDoctorPhoneNumber] = useState('');
     const [savedDoctorNumber, setSavedDoctorNumber] = useState('');
-
-    const [copySuccess, setCopySuccess] = useState('');
 
     // Load data from localStorage
     useEffect(() => {
@@ -126,6 +128,7 @@ const MaternalAndChildHealthPage: React.FC = () => {
         if (doctorPhoneNumber.trim()) {
             localStorage.setItem(DOCTOR_PHONE_KEY, doctorPhoneNumber.trim());
             setSavedDoctorNumber(doctorPhoneNumber.trim());
+            addNotification('ডাক্তারের নম্বর সফলভাবে সংরক্ষণ করা হয়েছে।', 'success');
             setDoctorPhoneNumber('');
         }
     };
@@ -148,11 +151,9 @@ const MaternalAndChildHealthPage: React.FC = () => {
         
         try {
             await navigator.clipboard.writeText(textToCopy);
-            setCopySuccess('সময়সূচী ক্লিপবোর্ডে কপি করা হয়েছে!');
-            setTimeout(() => setCopySuccess(''), 3000);
+            addNotification('সময়সূচী ক্লিপবোর্ডে কপি করা হয়েছে!', 'success');
         } catch (err) {
-            setCopySuccess('কপি করতে ব্যর্থ হয়েছে।');
-            setTimeout(() => setCopySuccess(''), 3000);
+            addNotification('সময়সূচী কপি করতে ব্যর্থ হয়েছে।', 'error');
         }
     };
     
@@ -249,7 +250,6 @@ const MaternalAndChildHealthPage: React.FC = () => {
                                         <ArrowDownTrayIcon className="h-5 w-5 mr-2"/>
                                         সময়সূচী এক্সপোর্ট করুন
                                     </button>
-                                    {copySuccess && <p className="text-green-600 dark:text-green-400 text-sm mt-3">{copySuccess}</p>}
                                 </div>
                             )}
                         </div>

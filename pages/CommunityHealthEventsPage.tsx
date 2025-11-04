@@ -1,7 +1,7 @@
 
 import React, { useState, FormEvent, useEffect, useRef, useMemo } from 'react';
-import { CommunityHealthEvent, EventCategory, GroundingChunk } from '../types';
-import { CalendarDaysIcon, MapIcon, ShareIcon, BellIcon, UserGroupIcon, MagnifyingGlassIcon } from '../components/IconComponents';
+import { CommunityHealthEvent, EventCategory, GroundingChunk, Notification } from '../types';
+import { CalendarDaysIcon, MapIcon, ShareIcon, BellIcon, UserGroupIcon, MagnifyingGlassIcon, ShieldCheckIcon } from '../components/IconComponents';
 import { getShareableUrl } from '../utils/shareUtils';
 import { findNearbyPlaces } from '../services/geminiService';
 
@@ -17,6 +17,7 @@ const mockEvents: CommunityHealthEvent[] = [
         organizer: 'জেলা স্বাস্থ্য অধিদপ্তর',
         mapLink: 'https://maps.google.com/?q=Comilla+Sadar+Hospital',
         coordinates: { lat: 23.4583, lng: 91.1833 },
+        verified: true,
     },
     {
         id: '2',
@@ -29,6 +30,7 @@ const mockEvents: CommunityHealthEvent[] = [
         organizer: 'সন্ধানী ব্লাড ব্যাংক',
         mapLink: 'https://maps.google.com/?q=Comilla+Town+Hall',
         coordinates: { lat: 23.4610, lng: 91.1848 },
+        verified: true,
     },
     {
         id: '3',
@@ -41,6 +43,7 @@ const mockEvents: CommunityHealthEvent[] = [
         organizer: 'স্বাস্থ্য বন্ধু কমিউনিটি',
         mapLink: 'https://maps.google.com/?q=Comilla',
         coordinates: { lat: 23.4680, lng: 91.1750 },
+        verified: false,
     },
     {
         id: '4',
@@ -53,6 +56,7 @@ const mockEvents: CommunityHealthEvent[] = [
         organizer: 'মনের বন্ধু',
         mapLink: 'https://maps.google.com/?q=Comilla+Public+Library',
         coordinates: { lat: 23.4625, lng: 91.1812 },
+        verified: true,
     },
 ];
 
@@ -67,7 +71,7 @@ const categoryColors: Record<EventCategory, string> = {
     'ডায়াবেটিস': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
 };
 
-const initialFormState: Omit<CommunityHealthEvent, 'id' | 'date' | 'coordinates'> & { date: string, coordinates: { lat: string, lng: string } } = {
+const initialFormState: Omit<CommunityHealthEvent, 'id' | 'date' | 'coordinates' | 'verified'> & { date: string, coordinates: { lat: string, lng: string } } = {
     title: '',
     description: '',
     category: 'টিকাদান',
@@ -79,11 +83,15 @@ const initialFormState: Omit<CommunityHealthEvent, 'id' | 'date' | 'coordinates'
     coordinates: { lat: '', lng: '' }
 };
 
-const CommunityHealthEventsPage: React.FC = () => {
+interface CommunityHealthEventsPageProps {
+    addNotification: (message: string, type?: Notification['type']) => void;
+}
+
+const CommunityHealthEventsPage: React.FC<CommunityHealthEventsPageProps> = ({ addNotification }) => {
     const [events, setEvents] = useState<CommunityHealthEvent[]>(mockEvents);
     const [activeCategory, setActiveCategory] = useState<'সব' | EventCategory | 'অনুসন্ধান'>('সব');
+    const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
     const [rsvpdEvents, setRsvpdEvents] = useState<Set<string>>(new Set());
-    const [notificationMessage, setNotificationMessage] = useState<string>('');
     const [showForm, setShowForm] = useState(false);
     const [newEvent, setNewEvent] = useState(initialFormState);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -96,8 +104,15 @@ const CommunityHealthEventsPage: React.FC = () => {
 
     const mapViewRef = useRef<HTMLDivElement>(null);
     
-    const filteredEvents = (activeCategory === 'সব' || activeCategory === 'অনুসন্ধান' ? events : events.filter(e => e.category === activeCategory))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const filteredEvents = useMemo(() => {
+        return events
+            .filter(e => {
+                const matchesCategory = activeCategory === 'সব' || activeCategory === 'অনুসন্ধান' || e.category === activeCategory;
+                const matchesVerified = !showVerifiedOnly || e.verified;
+                return matchesCategory && matchesVerified;
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [events, activeCategory, showVerifiedOnly]);
 
     const selectedEvent = useMemo(() => {
         if (!selectedEventId) return null;
@@ -115,8 +130,7 @@ const CommunityHealthEventsPage: React.FC = () => {
             message = `"${eventTitle}" ইভেন্টের জন্য আপনি সফলভাবে RSVP করেছেন!`;
         }
         setRsvpdEvents(newRsvpdEvents);
-        setNotificationMessage(message);
-        setTimeout(() => setNotificationMessage(''), 4000);
+        addNotification(message, 'success');
     };
 
     const handleShare = async (event: CommunityHealthEvent) => {
@@ -132,8 +146,7 @@ const CommunityHealthEventsPage: React.FC = () => {
             const body = encodeURIComponent(shareText);
             const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
             window.location.href = mailtoLink;
-            setNotificationMessage('ইমেইল ক্লায়েন্ট খোলা হচ্ছে...');
-            setTimeout(() => setNotificationMessage(''), 4000);
+            addNotification('ইমেইল ক্লায়েন্ট খোলা হচ্ছে...', 'info');
         }
     };
 
@@ -155,9 +168,11 @@ const CommunityHealthEventsPage: React.FC = () => {
             coordinates: {
                 lat: parseFloat(newEvent.coordinates.lat),
                 lng: parseFloat(newEvent.coordinates.lng)
-            }
+            },
+            verified: false, // User-submitted events are not verified by default
         };
         setEvents(prev => [createdEvent, ...prev]);
+        addNotification(`ইভেন্ট "${createdEvent.title}" সফলভাবে তৈরি করা হয়েছে।`, 'success');
         setNewEvent(initialFormState);
         setShowForm(false);
     };
@@ -202,13 +217,27 @@ const CommunityHealthEventsPage: React.FC = () => {
                 </header>
 
                 <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-wrap justify-center gap-2">
+                    <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
                         {categories.map(cat => (
                             <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-2 ${activeCategory === cat ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-teal-100 dark:hover:bg-slate-700'}`}>
                                 {cat === 'অনুসন্ধান' && <MagnifyingGlassIcon className="h-4 w-4" />}
                                 {cat}
                             </button>
                         ))}
+                         {activeCategory !== 'অনুসন্ধান' && (
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="verified-toggle-events"
+                                    checked={showVerifiedOnly}
+                                    onChange={(e) => setShowVerifiedOnly(e.target.checked)}
+                                    className="h-4 w-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500"
+                                />
+                                <label htmlFor="verified-toggle-events" className="ml-2 text-sm font-medium text-stone-700 dark:text-stone-300">
+                                    যাচাইকৃত
+                                </label>
+                            </div>
+                        )}
                     </div>
                     {activeCategory !== 'অনুসন্ধান' && (
                         <button onClick={() => setShowForm(prev => !prev)} className="px-5 py-2.5 bg-teal-600 text-white font-bold rounded-full shadow-lg hover:bg-teal-700 transition-transform transform hover:scale-105 whitespace-nowrap">
@@ -331,7 +360,10 @@ const CommunityHealthEventsPage: React.FC = () => {
                                 return (
                                     <div key={event.id} className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg p-5 border-l-4 ${selectedEventId === event.id ? 'border-teal-500' : 'border-transparent'}`}>
                                         <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full mb-2 ${categoryColors[event.category]}`}>{event.category}</span>
-                                        <h3 className="text-xl font-bold text-stone-800 dark:text-white mb-2">{event.title}</h3>
+                                        <h3 className="text-xl font-bold text-stone-800 dark:text-white mb-2 flex items-center gap-2">
+                                            {event.title}
+                                            {event.verified && <ShieldCheckIcon title="যাচাইকৃত" className="h-6 w-6 text-blue-500" />}
+                                        </h3>
                                         <p className="text-stone-600 dark:text-stone-400 mb-4">{event.description}</p>
                                         <div className="text-sm space-y-2 text-stone-700 dark:text-stone-300">
                                             <p className="flex items-center"><CalendarDaysIcon className="h-5 w-5 mr-2 text-teal-500" /> {new Date(event.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })} - {event.time}</p>
@@ -364,12 +396,6 @@ const CommunityHealthEventsPage: React.FC = () => {
                             )}
                         </div>
                     </section>
-                )}
-                
-                {notificationMessage && (
-                    <div className="fixed bottom-24 right-6 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg transition-transform animate-bounce">
-                        {notificationMessage}
-                    </div>
                 )}
             </div>
         </div>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Volunteer, VolunteerSkill } from '../types';
+import { Volunteer, VolunteerSkill, Notification } from '../types';
 import { MagnifyingGlassIcon, MapIcon, PhoneIcon, ShieldCheckIcon, BookmarkIcon, WhatsAppIcon } from '../components/IconComponents';
 
 const mockVolunteers: Volunteer[] = [
@@ -15,11 +15,15 @@ const SAVED_CONTACTS_KEY = 'savedVolunteerContacts';
 
 const skillOptions: VolunteerSkill[] = ['প্রাথমিক চিকিৎসা', 'মানসিক স্বাস্থ্য', 'মাতৃস্বাস্থ্য', 'দীর্ঘস্থায়ী রোগ'];
 
-const VolunteerDirectoryPage: React.FC = () => {
+interface VolunteerDirectoryPageProps {
+    addNotification: (message: string, type?: Notification['type']) => void;
+}
+
+const VolunteerDirectoryPage: React.FC<VolunteerDirectoryPageProps> = ({ addNotification }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeSkills, setActiveSkills] = useState<Set<VolunteerSkill>>(new Set());
+    const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
     const [savedContacts, setSavedContacts] = useState<Set<string>>(new Set());
-    const [notification, setNotification] = useState('');
     const [selectedVolunteerId, setSelectedVolunteerId] = useState<string | null>(null);
     const mapViewRef = useRef<HTMLDivElement>(null);
 
@@ -54,17 +58,17 @@ const VolunteerDirectoryPage: React.FC = () => {
         }
         setSavedContacts(newSaved);
         localStorage.setItem(SAVED_CONTACTS_KEY, JSON.stringify(Array.from(newSaved)));
-        setNotification(message);
-        setTimeout(() => setNotification(''), 3000);
+        addNotification(message, 'success');
     };
 
     const filteredVolunteers = useMemo(() => {
         return mockVolunteers.filter(v => {
             const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) || v.location.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesSkills = activeSkills.size === 0 || Array.from(activeSkills).every((s: VolunteerSkill) => v.skills.includes(s));
-            return matchesSearch && matchesSkills;
+            const matchesVerified = !showVerifiedOnly || v.verified;
+            return matchesSearch && matchesSkills && matchesVerified;
         });
-    }, [searchTerm, activeSkills]);
+    }, [searchTerm, activeSkills, showVerifiedOnly]);
     
     const selectedVolunteer = useMemo(() => {
         if (!selectedVolunteerId) return null;
@@ -89,7 +93,7 @@ const VolunteerDirectoryPage: React.FC = () => {
                 </header>
 
                 <section className="mb-8">
-                    <div className="max-w-xl mx-auto mb-6 relative">
+                    <div className="max-w-xl mx-auto mb-4 relative">
                         <MagnifyingGlassIcon className="h-5 w-5 absolute top-1/2 left-4 -translate-y-1/2 text-stone-400" />
                         <input
                             type="text"
@@ -98,6 +102,18 @@ const VolunteerDirectoryPage: React.FC = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 border rounded-full bg-white dark:bg-slate-800 border-stone-300 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 outline-none"
                         />
+                    </div>
+                    <div className="max-w-xl mx-auto mb-6 flex items-center justify-center">
+                        <input
+                            type="checkbox"
+                            id="verified-toggle"
+                            checked={showVerifiedOnly}
+                            onChange={(e) => setShowVerifiedOnly(e.target.checked)}
+                            className="h-4 w-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500"
+                        />
+                        <label htmlFor="verified-toggle" className="ml-2 text-sm font-medium text-stone-700 dark:text-stone-300">
+                            শুধুমাত্র যাচাইকৃত দেখান
+                        </label>
                     </div>
                     <div className="flex flex-wrap justify-center gap-2">
                         {skillOptions.map(skill => (
@@ -170,11 +186,6 @@ const VolunteerDirectoryPage: React.FC = () => {
                     </div>
                 </section>
             </div>
-            {notification && (
-                <div className="fixed bottom-24 right-6 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg transition-transform animate-bounce">
-                    {notification}
-                </div>
-            )}
         </div>
     );
 };

@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Page } from './types';
+import { Page, Notification } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -18,6 +19,8 @@ import VolunteerDirectoryPage from './pages/VolunteerDirectoryPage';
 
 type Theme = 'light' | 'dark';
 
+const NOTIFICATIONS_KEY = 'healthFriendNotifications';
+
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
   
@@ -28,6 +31,46 @@ const App: React.FC = () => {
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(NOTIFICATIONS_KEY);
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Failed to load notifications:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    } catch (e) {
+      console.error("Failed to save notifications:", e);
+    }
+  }, [notifications]);
+
+  const addNotification = useCallback((message: string, type: Notification['type'] = 'info') => {
+    const newNotification: Notification = {
+      id: new Date().toISOString(),
+      message,
+      type,
+      timestamp: Date.now(),
+      read: false,
+    };
+    setNotifications(prev => [newNotification, ...prev]);
+  }, []);
+
+  const markNotificationAsRead = useCallback((id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  }, []);
+
+  const markAllNotificationsAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -49,29 +92,30 @@ const App: React.FC = () => {
   };
 
   const renderPage = () => {
+    const pageProps = { navigateTo, addNotification };
     switch (currentPage) {
       case Page.Home:
         return <HomePage navigateTo={navigateTo} />;
       case Page.Missions:
         return <MissionsPage navigateTo={navigateTo} />;
       case Page.CommunityHealthMap:
-        return <CommunityHealthMapPage />;
+        return <CommunityHealthMapPage addNotification={addNotification} />;
       case Page.VoiceAssistant:
         return <VoiceAssistantPage />;
       case Page.MentalHealthCheck:
         return <MentalHealthCheckPage />;
       case Page.AnonymousHelpRequest:
-        return <AnonymousHelpRequestPage />;
+        return <AnonymousHelpRequestPage addNotification={addNotification} />;
       case Page.SeasonalHealthTips:
-        return <SeasonalHealthTipsPage />;
+        return <SeasonalHealthTipsPage addNotification={addNotification} />;
       case Page.MaternalAndChildHealth:
-        return <MaternalAndChildHealthPage />;
+        return <MaternalAndChildHealthPage addNotification={addNotification} />;
       case Page.SymptomAwarenessGuide:
-        return <SymptomAwarenessGuidePage />;
+        return <SymptomAwarenessGuidePage addNotification={addNotification} />;
       case Page.CommunityHealthEvents:
-        return <CommunityHealthEventsPage />;
+        return <CommunityHealthEventsPage addNotification={addNotification} />;
       case Page.VolunteerDirectory:
-        return <VolunteerDirectoryPage />;
+        return <VolunteerDirectoryPage addNotification={addNotification} />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }
@@ -84,6 +128,9 @@ const App: React.FC = () => {
         currentPage={currentPage} 
         theme={theme} 
         toggleTheme={toggleTheme} 
+        notifications={notifications}
+        markNotificationAsRead={markNotificationAsRead}
+        markAllNotificationsAsRead={markAllNotificationsAsRead}
       />
       <main className="flex-grow">
         {renderPage()}

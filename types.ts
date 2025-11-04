@@ -14,6 +14,14 @@ export enum Page {
   VolunteerDirectory,
 }
 
+export interface Notification {
+  id: string;
+  message: string;
+  type: 'success' | 'info' | 'error';
+  timestamp: number;
+  read: boolean;
+}
+
 export interface Mission {
   id: number;
   title: string;
@@ -89,6 +97,7 @@ export interface CommunityHealthEvent {
     lat: number;
     lng: number;
   };
+  verified: boolean;
 }
 
 export type VolunteerSkill = 'প্রাথমিক চিকিৎসা' | 'মানসিক স্বাস্থ্য' | 'মাতৃস্বাস্থ্য' | 'দীর্ঘস্থায়ী রোগ';

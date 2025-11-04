@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { HealthTopic } from '../types';
+import { HealthTopic, Notification } from '../types';
 import { SpeakerWaveIcon, ExclamationTriangleIcon, SparklesIcon, ChevronDownIcon, BookOpenIcon, CheckCircleIcon, ShareIcon } from '../components/IconComponents';
 import { getShareableUrl } from '../utils/shareUtils';
 import { generateSpeech } from '../services/geminiService';
@@ -82,10 +82,13 @@ const healthTopicsData: HealthTopic[] = [
 
 const categories: (HealthTopic['category'] | 'সব')[] = ['সব', 'সাধারণ', 'পেট', 'বুক', 'মাথা'];
 
-const SymptomAwarenessGuidePage: React.FC = () => {
+interface SymptomAwarenessGuidePageProps {
+    addNotification: (message: string, type?: Notification['type']) => void;
+}
+
+const SymptomAwarenessGuidePage: React.FC<SymptomAwarenessGuidePageProps> = ({ addNotification }) => {
     const [activeCategory, setActiveCategory] = useState<HealthTopic['category'] | 'সব'>('সব');
     const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
-    const [copySuccessMessage, setCopySuccessMessage] = useState<{ topic: string, message: string } | null>(null);
     const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
     
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -142,13 +145,12 @@ const SymptomAwarenessGuidePage: React.FC = () => {
             }
         } catch (error) {
             console.error('Error handling audio playback:', error);
-            alert('দুঃখিত, অডিও চালাতে একটি সমস্যা হয়েছে।');
+            addNotification('দুঃখিত, অডিও চালাতে একটি সমস্যা হয়েছে।', 'error');
             setCurrentlyPlaying(null);
         }
     };
 
     const handleShare = async (topic: HealthTopic) => {
-        setCopySuccessMessage(null);
         const title = `স্বাস্থ্য বন্ধু নির্দেশিকা: ${topic.title}`;
         const worryText = `কখন চিন্তা করবেন:\n- ${topic.worry.join('\n- ')}`;
         const dosText = `কী করণীয়:\n- ${topic.dos.join('\n- ')}`;
@@ -172,10 +174,7 @@ const SymptomAwarenessGuidePage: React.FC = () => {
             const body = encodeURIComponent(shareData.text);
             const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
             window.location.href = mailtoLink;
-
-            // Provide feedback
-            setCopySuccessMessage({ topic: topic.title, message: 'ইমেইল ক্লায়েন্ট খোলা হচ্ছে...' });
-            setTimeout(() => setCopySuccessMessage(null), 3000);
+            addNotification('ইমেইল ক্লায়েন্ট খোলা হচ্ছে...', 'info');
         }
     };
 
@@ -313,11 +312,6 @@ const SymptomAwarenessGuidePage: React.FC = () => {
 
                                         {/* Share button */}
                                         <div className="border-t border-stone-200 dark:border-slate-700 mt-6 pt-4 flex justify-end items-center gap-4">
-                                            {copySuccessMessage && copySuccessMessage.topic === topic.title && (
-                                                <p className="text-sm text-green-600 dark:text-green-400 transition-opacity duration-300">
-                                                    {copySuccessMessage.message}
-                                                </p>
-                                            )}
                                             <button 
                                                 onClick={() => handleShare(topic)}
                                                 className="inline-flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-700 text-stone-700 dark:text-stone-300 font-medium rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
