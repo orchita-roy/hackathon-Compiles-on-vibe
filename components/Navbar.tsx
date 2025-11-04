@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Page, Notification } from '../types';
-import { HeartIcon, SunIcon, MoonIcon, BellIcon, CheckCircleIcon } from './IconComponents';
+import { Page, Notification, User } from '../types';
+import { HeartIcon, SunIcon, MoonIcon, BellIcon, UserCircleIcon } from './IconComponents';
 
 interface NavbarProps {
   navigateTo: (page: Page) => void;
@@ -10,6 +10,9 @@ interface NavbarProps {
   notifications: Notification[];
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
+  currentUser: User | null;
+  onLoginClick: () => void;
+  onLogoutClick: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -19,10 +22,16 @@ const Navbar: React.FC<NavbarProps> = ({
   toggleTheme,
   notifications,
   markNotificationAsRead,
-  markAllNotificationsAsRead
+  markAllNotificationsAsRead,
+  currentUser,
+  onLoginClick,
+  onLogoutClick
 }) => {
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
     { page: Page.Home, label: 'হোম' },
@@ -35,8 +44,11 @@ const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        setIsPanelOpen(false);
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -46,6 +58,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const headerClasses = 'bg-stone-50/80 dark:bg-slate-900/80 backdrop-blur-md shadow-md sticky';
   const logoClasses = 'text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300';
   const themeToggleClasses = 'text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 focus:ring-offset-stone-100 dark:focus:ring-offset-slate-800';
+
+  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : '?';
 
   return (
     <header className={`${headerClasses} top-0 z-50 transition-colors duration-300`}>
@@ -78,9 +92,9 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            <div className="relative ml-4" ref={panelRef}>
+            <div className="relative ml-4" ref={notificationsRef}>
               <button
-                onClick={() => setIsPanelOpen(prev => !prev)}
+                onClick={() => setIsNotificationsOpen(prev => !prev)}
                 className={`p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 relative ${themeToggleClasses}`}
                 aria-label="Toggle notifications"
               >
@@ -88,7 +102,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 {hasUnread && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-teal-500 ring-2 ring-stone-50 dark:ring-slate-900"></span>}
               </button>
               
-              {isPanelOpen && (
+              {isNotificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 max-h-[80vh] overflow-y-auto bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700">
                   <div className="p-3 flex justify-between items-center border-b dark:border-slate-700 sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                     <h3 className="font-bold text-stone-800 dark:text-white">নোটিফিকেশন</h3>
@@ -130,6 +144,46 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
             </button>
+
+            <div className="relative ml-3" ref={profileRef}>
+              {currentUser ? (
+                  <>
+                    <button
+                        onClick={() => setIsProfileOpen(prev => !prev)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 bg-teal-600 text-white`}
+                    >
+                        {userInitial}
+                    </button>
+                    {isProfileOpen && (
+                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700">
+                            <div className="p-4 border-b dark:border-slate-700">
+                                <p className="font-bold text-lg text-stone-800 dark:text-white truncate">{currentUser.name}</p>
+                                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">{currentUser.email}</p>
+                                <div className="text-sm text-stone-500 dark:text-stone-400 mt-2 flex gap-4">
+                                    {currentUser.gender && <span>লিঙ্গ: {currentUser.gender === 'male' ? 'পুরুষ' : currentUser.gender === 'female' ? 'মহিলা' : 'অন্যান্য'}</span>}
+                                    {currentUser.age && <span>বয়স: {currentUser.age}</span>}
+                                </div>
+                            </div>
+                            <div className="p-2">
+                                <button
+                                    onClick={() => { onLogoutClick(); setIsProfileOpen(false); }}
+                                    className="w-full text-left px-3 py-2 rounded-md text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-slate-700 transition-colors"
+                                >
+                                    লগআউট
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                  </>
+              ) : (
+                  <button
+                      onClick={onLoginClick}
+                      className="px-4 py-2 text-sm font-medium text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-slate-700 rounded-md hover:bg-stone-200 dark:hover:bg-slate-600 transition-colors"
+                  >
+                      লগইন
+                  </button>
+              )}
+            </div>
           </div>
         </div>
       </nav>

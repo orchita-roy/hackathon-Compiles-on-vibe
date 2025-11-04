@@ -22,6 +22,13 @@ export interface Notification {
   read: boolean;
 }
 
+export interface User {
+  name: string;
+  email: string;
+  gender?: 'male' | 'female' | 'other';
+  age?: number;
+}
+
 export interface Mission {
   id: number;
   title: string;

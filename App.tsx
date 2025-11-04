@@ -1,7 +1,8 @@
 
 
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Page, Notification } from './types';
+import { Page, Notification, User } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -16,10 +17,12 @@ import MaternalAndChildHealthPage from './pages/MaternalAndChildHealthPage';
 import SymptomAwarenessGuidePage from './pages/SymptomAwarenessGuidePage';
 import CommunityHealthEventsPage from './pages/CommunityHealthEventsPage';
 import VolunteerDirectoryPage from './pages/VolunteerDirectoryPage';
+import AuthPage from './pages/AuthPage';
 
 type Theme = 'light' | 'dark';
 
 const NOTIFICATIONS_KEY = 'healthFriendNotifications';
+const USER_KEY = 'healthFriendUser';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
@@ -33,6 +36,8 @@ const App: React.FC = () => {
   });
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -40,8 +45,12 @@ const App: React.FC = () => {
       if (saved) {
         setNotifications(JSON.parse(saved));
       }
+      const savedUser = localStorage.getItem(USER_KEY);
+      if (savedUser) {
+        setCurrentUser(JSON.parse(savedUser));
+      }
     } catch (e) {
-      console.error("Failed to load notifications:", e);
+      console.error("Failed to load data from localStorage:", e);
     }
   }, []);
 
@@ -52,7 +61,7 @@ const App: React.FC = () => {
       console.error("Failed to save notifications:", e);
     }
   }, [notifications]);
-
+  
   const addNotification = useCallback((message: string, type: Notification['type'] = 'info') => {
     const newNotification: Notification = {
       id: new Date().toISOString(),
@@ -63,6 +72,37 @@ const App: React.FC = () => {
     };
     setNotifications(prev => [newNotification, ...prev]);
   }, []);
+
+  const handleLogin = useCallback((user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setIsAuthModalOpen(false);
+    addNotification(`স্বাগতম, ${user.name}!`, 'success');
+  }, [addNotification]);
+  
+  const handleSignup = useCallback((user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setIsAuthModalOpen(false);
+    addNotification(`${user.name}, আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!`, 'success');
+  }, [addNotification]);
+
+  const handleGoogleLogin = useCallback(() => {
+    // This is a mock implementation. In a real app, this would involve a Google OAuth flow.
+    const mockGoogleUser: User = {
+      name: 'গুগল ব্যবহারকারী',
+      email: 'user@google.com',
+      age: 30,
+      gender: 'other',
+    };
+    handleLogin(mockGoogleUser);
+  }, [handleLogin]);
+
+  const handleLogout = useCallback(() => {
+    setCurrentUser(null);
+    localStorage.removeItem(USER_KEY);
+    addNotification('আপনি সফলভাবে লগ আউট করেছেন।', 'info');
+  }, [addNotification]);
 
   const markNotificationAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -107,7 +147,7 @@ const App: React.FC = () => {
       case Page.AnonymousHelpRequest:
         return <AnonymousHelpRequestPage addNotification={addNotification} />;
       case Page.SeasonalHealthTips:
-        return <SeasonalHealthTipsPage addNotification={addNotification} />;
+        return <SeasonalHealthTipsPage />;
       case Page.MaternalAndChildHealth:
         return <MaternalAndChildHealthPage addNotification={addNotification} />;
       case Page.SymptomAwarenessGuide:
@@ -131,10 +171,21 @@ const App: React.FC = () => {
         notifications={notifications}
         markNotificationAsRead={markNotificationAsRead}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
+        currentUser={currentUser}
+        onLoginClick={() => setIsAuthModalOpen(true)}
+        onLogoutClick={handleLogout}
       />
       <main className="flex-grow">
         {renderPage()}
       </main>
+      {isAuthModalOpen && (
+        <AuthPage 
+            onClose={() => setIsAuthModalOpen(false)}
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            onGoogleLogin={handleGoogleLogin}
+        />
+      )}
       <Footer />
       <Chatbot />
     </div>

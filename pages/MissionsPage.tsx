@@ -26,16 +26,26 @@ interface MissionsPageProps {
 
 const MissionsPage: React.FC<MissionsPageProps> = ({ navigateTo }) => {
     return (
-        <div className="bg-stone-50 dark:bg-slate-900 py-12">
-            <div className="container mx-auto px-6">
-                {/* Header Section */}
-                <header className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-stone-800 dark:text-stone-100">আমাদের মিশন</h1>
-                    <p className="mt-4 text-lg text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
+        <div className="bg-stone-50 dark:bg-slate-900">
+            {/* Hero Section */}
+            <header className="relative h-[60vh] min-h-[450px] text-white overflow-hidden">
+                <div 
+                    className="absolute inset-0 w-full h-full bg-cover bg-center"
+                    style={{ backgroundImage: "url('https://satu-bd.org/wp-content/uploads/2018/04/slide-3.jpg')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/40 to-transparent"></div>
+                <div className="relative z-10 flex flex-col items-center justify-center h-full container mx-auto px-6 text-center">
+                    <h1 className="text-4xl md:text-5xl font-extrabold" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.6)' }}>
+                        আমাদের মিশন
+                    </h1>
+                    <p className="mt-4 text-lg md:text-xl text-stone-200 max-w-3xl mx-auto" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
                         আমরা মানসিক, মাতৃ এবং প্রতিরোধমূলক যত্ন সহ নয়টি কেন্দ্রবিন্দু মিশনের মাধ্যমে সম্প্রদায়ের স্বাস্থ্যের উন্নতিতে নিবেদিত।
                     </p>
-                </header>
-
+                </div>
+            </header>
+            
+            {/* Main Content Section */}
+            <main className="container mx-auto px-6 py-20">
                 {/* Features List Section */}
                 <section>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -61,7 +71,7 @@ const MissionsPage: React.FC<MissionsPageProps> = ({ navigateTo }) => {
                     <h2 className="text-3xl font-bold text-stone-800 dark:text-stone-100">একটি স্বাস্থ্যকর সমাজ গঠনে আমাদের সাথে যোগ দিন</h2>
                     <p className="mt-4 text-lg text-stone-600 dark:text-stone-400">আপনি কীভাবে উপকৃত হতে পারেন এবং অবদান রাখতে পারেন তা দেখতে প্রতিটি মিশন অন্বেষণ করুন।</p>
                 </section>
-            </div>
+            </main>
         </div>
     );
 };

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { findNearbyPlaces } from '../services/geminiService';
 import { GroundingChunk, Notification } from '../types';
-import { MapIcon, ArrowDownTrayIcon } from '../components/IconComponents';
+import { MapIcon, ArrowDownTrayIcon, BookmarkIcon } from '../components/IconComponents';
 
 const OFFLINE_MAP_KEY = 'offlineHealthMapData';
 
@@ -64,17 +65,27 @@ const CommunityHealthMapPage: React.FC<CommunityHealthMapPageProps> = ({ addNoti
 
   const mapChunks = result?.chunks?.filter(c => c.maps) || [];
 
-  const handleSaveOffline = () => {
-    if (result && mapChunks.length > 0) {
-        try {
-            localStorage.setItem(OFFLINE_MAP_KEY, JSON.stringify(mapChunks));
-            setOfflineLocations(mapChunks);
-            addNotification(`${mapChunks.length}টি অবস্থান অফলাইন ব্যবহারের জন্য সংরক্ষণ করা হয়েছে।`, 'success');
-        } catch (e) {
-            console.error("Failed to save map data:", e);
-            addNotification('অবস্থান সংরক্ষণ করতে ব্যর্থ হয়েছে।', 'error');
-        }
-    }
+  const handleToggleOfflineSave = (chunkToSave: GroundingChunk) => {
+      const isSaved = offlineLocations.some(loc => loc.maps?.uri === chunkToSave.maps?.uri);
+      let updatedLocations: GroundingChunk[];
+      let message = '';
+      
+      if (isSaved) {
+          updatedLocations = offlineLocations.filter(loc => loc.maps?.uri !== chunkToSave.maps?.uri);
+          message = `"${chunkToSave.maps?.title}" অফলাইন থেকে সরানো হয়েছে।`;
+      } else {
+          updatedLocations = [...offlineLocations, chunkToSave];
+          message = `"${chunkToSave.maps?.title}" অফলাইনে সংরক্ষণ করা হয়েছে।`;
+      }
+
+      try {
+          localStorage.setItem(OFFLINE_MAP_KEY, JSON.stringify(updatedLocations));
+          setOfflineLocations(updatedLocations);
+          addNotification(message, 'success');
+      } catch (e) {
+          console.error("Failed to save map data:", e);
+          addNotification('অবস্থান সংরক্ষণ করতে ব্যর্থ হয়েছে।', 'error');
+      }
   };
 
   const renderOnlineView = () => (
@@ -116,30 +127,33 @@ const CommunityHealthMapPage: React.FC<CommunityHealthMapPageProps> = ({ addNoti
                   <div className="md:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md h-[60vh] overflow-y-auto">
                       <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-stone-900 dark:text-white">প্রাসঙ্গিক অবস্থান</h2>
-                        <button
-                            onClick={handleSaveOffline}
-                            title="Save results for offline use"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-slate-700 rounded-full hover:bg-teal-200 dark:hover:bg-slate-600 transition-colors"
-                        >
-                            <ArrowDownTrayIcon className="h-4 w-4" />
-                            অফলাইনে সংরক্ষণ
-                        </button>
                       </div>
                       <ul className="space-y-3">
-                          {mapChunks.map((chunk, index) => (
-                              <li key={index}>
-                                  <button
-                                      onClick={() => setSelectedLocation(chunk)}
-                                      className={`w-full flex items-start p-3 rounded-md shadow-sm text-left transition-colors ${selectedLocation?.maps?.uri === chunk.maps?.uri ? 'bg-teal-100 dark:bg-slate-600' : 'bg-stone-50 dark:bg-slate-700 hover:bg-teal-50 dark:hover:bg-slate-600'}`}
-                                      aria-current={selectedLocation?.maps?.uri === chunk.maps?.uri}
-                                  >
-                                      <MapIcon className="h-6 w-6 text-teal-500 mr-4 flex-shrink-0 mt-1" />
-                                      <span className="text-stone-800 dark:text-stone-200 font-medium">
-                                          {chunk.maps?.title}
-                                      </span>
-                                  </button>
-                              </li>
-                          ))}
+                          {mapChunks.map((chunk, index) => {
+                              const isSaved = offlineLocations.some(loc => loc.maps?.uri === chunk.maps?.uri);
+                              return (
+                                  <li key={index}>
+                                      <div className={`w-full flex items-start p-3 rounded-md shadow-sm transition-colors ${selectedLocation?.maps?.uri === chunk.maps?.uri ? 'bg-teal-100 dark:bg-slate-600' : 'bg-stone-50 dark:bg-slate-700'}`}>
+                                          <button
+                                              onClick={() => setSelectedLocation(chunk)}
+                                              className="flex-grow flex items-start text-left"
+                                          >
+                                            <MapIcon className="h-6 w-6 text-teal-500 mr-4 flex-shrink-0 mt-1" />
+                                            <span className="text-stone-800 dark:text-stone-200 font-medium">
+                                                {chunk.maps?.title}
+                                            </span>
+                                          </button>
+                                          <button 
+                                              onClick={() => handleToggleOfflineSave(chunk)}
+                                              title={isSaved ? "অফলাইন থেকে সরান" : "অফলাইনে সংরক্ষণ করুন"}
+                                              className="ml-2 p-1"
+                                          >
+                                              <BookmarkIcon solid={isSaved} className={`h-6 w-6 transition-colors ${isSaved ? 'text-teal-500' : 'text-stone-400 hover:text-teal-500'}`} />
+                                          </button>
+                                      </div>
+                                  </li>
+                              );
+                          })}
                       </ul>
                   </div>
 
@@ -199,19 +213,24 @@ const CommunityHealthMapPage: React.FC<CommunityHealthMapPageProps> = ({ addNoti
   );
 
   return (
-    <div className="bg-stone-50 dark:bg-slate-900 min-h-[calc(100vh-8rem)]">
-      <div className="container mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-stone-800 dark:text-stone-100">কমিউনিটি স্বাস্থ্য মানচিত্র</h1>
-          <p className="mt-4 text-lg text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
-            কুমিল্লা, বাংলাদেশ অঞ্চলের ক্লিনিক, ফার্মেসি এবং স্বাস্থ্যকর্মী খুঁজে পেতে প্রশ্ন জিজ্ঞাসা করুন।
-          </p>
+    <div>
+      {/* Hero Section */}
+      <section className="relative h-[60vh] min-h-[500px] bg-contain bg-center bg-no-repeat bg-slate-900 text-white" style={{ backgroundImage: "url('https://blog.brac.net/wp-content/uploads/2022/04/Supporting-the-Government-of-Bangladesh-in-Covid-19-vaccination-drive_6-scaled.jpg')" }}>
+        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="relative z-10 flex flex-col items-center justify-center h-full container mx-auto px-6 text-center">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.5)' }}>কমিউনিটি স্বাস্থ্য মানচিত্র</h1>
+            <p className="mt-4 text-lg text-stone-200 max-w-3xl mx-auto" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.5)' }}>
+                কুমিল্লা, বাংলাদেশ অঞ্চলের ক্লিনিক, ফার্মেসি এবং স্বাস্থ্যকর্মী খুঁজে পেতে প্রশ্ন জিজ্ঞাসা করুন।
+            </p>
         </div>
+      </section>
 
-        {isOnline ? renderOnlineView() : renderOfflineView()}
-        
-      </div>
+      {/* Content Section */}
+      <section className="bg-stone-50 dark:bg-slate-900">
+        <div className="container mx-auto px-6 py-12">
+            {isOnline ? renderOnlineView() : renderOfflineView()}
+        </div>
+      </section>
     </div>
   );
 };
