@@ -21,13 +21,6 @@ const wellnessTips: Record<Mood, string> = {
 };
 
 const moodValue: Record<Mood, number> = { happy: 5, calm: 4, neutral: 3, sad: 2, anxious: 1 };
-const moodColorCSS: Record<Mood, string> = { 
-    happy: 'bg-green-500', 
-    calm: 'bg-blue-500',
-    neutral: 'bg-yellow-500',
-    sad: 'bg-indigo-500',
-    anxious: 'bg-purple-500'
-};
 
 const TrendsChart: React.FC<{ data: MentalHealthCheckin[] }> = ({ data }) => {
     const last7DaysData = useMemo(() => {
@@ -42,29 +35,86 @@ const TrendsChart: React.FC<{ data: MentalHealthCheckin[] }> = ({ data }) => {
         }
         return days;
     }, [data]);
+
+    const points = useMemo(() => {
+        return last7DaysData
+            .map((day, index) => {
+                if (!day.checkin) return null;
+                const mood = moodValue[day.checkin.mood]; // 1 to 5
+                return {
+                    x: (index / 6) * 100, // percentage from 0 to 100
+                    y: 100 - ((mood - 1) / 4) * 80 - 10, // percentage from 10 (top) to 90 (bottom)
+                    mood: day.checkin.mood,
+                    label: moodOptions.find(m => m.mood === day.checkin.mood)?.label,
+                    date: day.date
+                };
+            })
+            .filter((p): p is { x: number; y: number; mood: Mood; label: string; date: Date } => p !== null && p.label !== undefined);
+    }, [last7DaysData]);
+
+    const pathData = useMemo(() => {
+        if (points.length < 2) return '';
+        return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    }, [points]);
+
+    const moodColorSVG: Record<Mood, string> = { 
+        happy: 'stroke-green-500 fill-green-500', 
+        calm: 'stroke-blue-500 fill-blue-500',
+        neutral: 'stroke-yellow-500 fill-yellow-500',
+        sad: 'stroke-indigo-500 fill-indigo-500',
+        anxious: 'stroke-purple-500 fill-purple-500'
+    };
     
     return (
         <div>
             <h3 className="text-xl font-bold text-stone-800 dark:text-white mb-4">গত ৭ দিনের ট্রেন্ড</h3>
-            <div className="flex justify-between items-end h-40 bg-stone-100 dark:bg-slate-700 p-4 rounded-lg">
-                {last7DaysData.map(({ date, checkin }, index) => (
-                    <div key={index} className="flex flex-col items-center w-1/7 text-center flex-1">
-                        <div className="h-full flex items-end">
-                            {checkin ? (
-                                <div 
-                                    className={`w-8 rounded-t-md ${moodColorCSS[checkin.mood]}`}
-                                    style={{ height: `${moodValue[checkin.mood] * 20}%` }}
-                                    title={`${new Date(checkin.date).toLocaleDateString('bn-BD')}: ${moodOptions.find(m => m.mood === checkin.mood)?.label}`}
-                                ></div>
-                            ) : (
-                                <div className="w-8 h-1 bg-stone-300 dark:bg-slate-600 rounded-t-md" title={date.toLocaleDateString('bn-BD')}></div>
-                            )}
-                        </div>
-                        <p className="text-xs text-stone-600 dark:text-stone-400 mt-2">
-                            {date.toLocaleDateString('bn-BD', { weekday: 'short' }).slice(0, 3)}
-                        </p>
-                    </div>
-                ))}
+            {points.length < 2 && (
+                <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400 mb-4 text-center">
+                    {data.length === 1 ? 'এটি আপনার প্রথম চেক-ইন। আপনার মানসিক স্বাস্থ্যের ট্রেন্ড দেখতে থাকুন!' : 'গত ৭ দিনের ট্রেন্ড দেখতে কমপক্ষে দুটি চেক-ইন প্রয়োজন।'}
+                </p>
+            )}
+            <div className="relative h-60 bg-stone-100 dark:bg-slate-700 p-4 rounded-lg">
+                <svg width="100%" height="100%" viewBox="0 0 100 120" preserveAspectRatio="xMidYMin meet" aria-label="মানসিক স্বাস্থ্যের ট্রেন্ড চার্ট">
+                    {/* Grid lines for moods */}
+                    <line x1="0" y1="10" x2="100" y2="10" className="stroke-stone-200 dark:stroke-slate-600" strokeWidth="0.5" strokeDasharray="2,2" />
+                    <line x1="0" y1="30" x2="100" y2="30" className="stroke-stone-200 dark:stroke-slate-600" strokeWidth="0.5" strokeDasharray="2,2" />
+                    <line x1="0" y1="50" x2="100" y2="50" className="stroke-stone-200 dark:stroke-slate-600" strokeWidth="0.5" strokeDasharray="2,2" />
+                    <line x1="0" y1="70" x2="100" y2="70" className="stroke-stone-200 dark:stroke-slate-600" strokeWidth="0.5" strokeDasharray="2,2" />
+                    <line x1="0" y1="90" x2="100" y2="90" className="stroke-stone-200 dark:stroke-slate-600" strokeWidth="0.5" strokeDasharray="2,2" />
+                    
+                    {/* Trend line */}
+                    {pathData && <path d={pathData} fill="none" className="stroke-teal-500" strokeWidth="1.5" />}
+
+                    {/* Data points */}
+                    {points.map((p, i) => (
+                        <circle 
+                            key={i} 
+                            cx={p.x} 
+                            cy={p.y} 
+                            r="2.5" 
+                            className={`${moodColorSVG[p.mood]}`}
+                        >
+                            <title>{`${p.date.toLocaleDateString('bn-BD')}: ${p.label}`}</title>
+                        </circle>
+                    ))}
+
+                    {/* X-axis labels */}
+                    {last7DaysData.map((day, index) => {
+                        const x = (index / 6) * 100;
+                        return (
+                             <text
+                                key={index}
+                                x={x}
+                                y="108"
+                                textAnchor="end"
+                                className="text-[10px] fill-stone-600 dark:fill-stone-400 font-sans"
+                                transform={`rotate(-45 ${x} 108)`}
+                            >
+                                {day.date.toLocaleDateString('bn-BD', { weekday: 'short' }).slice(0, 3)}
+                            </text>
+                        );
+                    })}
+                </svg>
             </div>
         </div>
     );
@@ -84,7 +134,7 @@ const HistoryList: React.FC<{ checkins: MentalHealthCheckin[] }> = ({ checkins }
                                 <p className="font-bold text-stone-800 dark:text-stone-200">
                                     {new Date(checkin.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}
                                 </p>
-                                <p className="text-stone-600 dark:text-stone-400">{checkin.reflection || 'কোনো মন্তব্য নেই।'}</p>
+                                <p className="text-stone-600 dark:text-stone-400 leading-relaxed mt-1">{checkin.reflection || 'কোনো মন্তব্য নেই।'}</p>
                             </div>
                         </li>
                     );
@@ -150,29 +200,29 @@ const MentalHealthCheckPage: React.FC = () => {
             <div className="container mx-auto px-6">
                 <header className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-stone-800 dark:text-stone-100">মানসিক স্বাস্থ্য পরীক্ষা</h1>
-                    <p className="mt-4 text-lg text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
+                    <p className="mt-4 text-lg leading-relaxed text-stone-600 dark:text-stone-400 max-w-3xl mx-auto">
                         নিয়মিত আপনার মানসিক অবস্থা পরীক্ষা করে নিজের যত্ন নিন।
                     </p>
                 </header>
 
-                <section className="max-w-2xl mx-auto mb-12">
+                <section className="max-w-2xl mx-auto mb-16">
                     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 sm:p-8">
                         {hasCheckedInToday ? (
                             <div className="text-center">
                                 <h2 className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-4">আজকের জন্য ধন্যবাদ!</h2>
-                                <p className="text-stone-600 dark:text-stone-400">আপনি ইতিমধ্যে আজ চেক ইন করেছেন। আগামীকাল আবার আসবেন।</p>
+                                <p className="text-stone-600 dark:text-stone-400 leading-relaxed">আপনি ইতিমধ্যে আজ চেক ইন করেছেন। আগামীকাল আবার আসবেন।</p>
                             </div>
                         ) : (
                             <>
                                 {showReminder && (
                                     <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded-r-lg flex items-center space-x-3">
                                         <InformationCircleIcon className="h-6 w-6 flex-shrink-0" />
-                                        <p><span className="font-bold">অনুস্মারক:</span> আপনাকে কিছুক্ষণ ধরে দেখিনি। আপনার অনুভূতি পরীক্ষা করার জন্য এটি একটি ভালো সময়।</p>
+                                        <p className="leading-relaxed"><span className="font-bold">অনুস্মারক:</span> আপনাকে কিছুক্ষণ ধরে দেখিনি। আপনার অনুভূতি পরীক্ষা করার জন্য এটি একটি ভালো সময়।</p>
                                     </div>
                                 )}
                                 <h2 className="text-2xl font-bold text-stone-800 dark:text-white mb-6 text-center">আজ আপনার কেমন লাগছে?</h2>
                                 
-                                <div className="flex justify-around items-center mb-6 flex-wrap gap-2">
+                                <div className="flex justify-around items-center mb-8 flex-wrap gap-2">
                                     {moodOptions.map(({ mood, emoji, label }) => (
                                         <button key={mood} onClick={() => setSelectedMood(mood)} className={`text-center p-2 rounded-lg transition-all duration-200 w-20 ${selectedMood === mood ? 'bg-teal-100 dark:bg-slate-700 ring-2 ring-teal-500' : 'hover:bg-stone-100 dark:hover:bg-slate-700'}`}>
                                             <span className="text-4xl sm:text-5xl">{emoji}</span>
@@ -183,7 +233,7 @@ const MentalHealthCheckPage: React.FC = () => {
                                 
                                 {selectedMood && (
                                     <div className="my-6 p-4 bg-teal-50 dark:bg-slate-700/50 rounded-lg text-center">
-                                        <p className="text-teal-800 dark:text-teal-200">{wellnessTips[selectedMood]}</p>
+                                        <p className="text-teal-800 dark:text-teal-200 leading-relaxed">{wellnessTips[selectedMood]}</p>
                                     </div>
                                 )}
 
