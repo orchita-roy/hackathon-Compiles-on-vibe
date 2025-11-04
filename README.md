@@ -1,4 +1,4 @@
-<This app is designed to enhance community health by providing easy access to essential health information and services, especially for rural populations with limited internet access. The features include mental health tracking, health resources, anonymous help requests, preventive health tips, maternal care tracking, and much more.
+This app is designed to enhance community health by providing easy access to essential health information and services, especially for rural populations with limited internet access. The features include mental health tracking, health resources, anonymous help requests, preventive health tips, maternal care tracking, and much more.
 
 Features
 1. Mental Health Check-in
