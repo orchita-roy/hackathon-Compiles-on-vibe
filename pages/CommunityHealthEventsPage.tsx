@@ -1,12 +1,9 @@
 
-import React, { useState, FormEvent, useEffect, useRef } from 'react';
+import React, { useState, FormEvent, useEffect, useRef, useMemo } from 'react';
 import { CommunityHealthEvent, EventCategory, GroundingChunk } from '../types';
 import { CalendarDaysIcon, MapIcon, ShareIcon, BellIcon, UserGroupIcon, MagnifyingGlassIcon } from '../components/IconComponents';
 import { getShareableUrl } from '../utils/shareUtils';
 import { findNearbyPlaces } from '../services/geminiService';
-
-// Add type declaration for Leaflet
-declare const L: any;
 
 const mockEvents: CommunityHealthEvent[] = [
     {
@@ -83,7 +80,6 @@ const initialFormState: Omit<CommunityHealthEvent, 'id' | 'date' | 'coordinates'
 };
 
 const CommunityHealthEventsPage: React.FC = () => {
-    // State for user-submitted events
     const [events, setEvents] = useState<CommunityHealthEvent[]>(mockEvents);
     const [activeCategory, setActiveCategory] = useState<'সব' | EventCategory | 'অনুসন্ধান'>('সব');
     const [rsvpdEvents, setRsvpdEvents] = useState<Set<string>>(new Set());
@@ -92,73 +88,22 @@ const CommunityHealthEventsPage: React.FC = () => {
     const [newEvent, setNewEvent] = useState(initialFormState);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-    // State for map grounding search
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<{ text: string; chunks: GroundingChunk[] } | null>(null);
     const [searchIsLoading, setSearchIsLoading] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<GroundingChunk | null>(null);
 
-    // Refs for Leaflet map
-    const mapContainerRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<any>(null);
-    const markersRef = useRef<{ [key: string]: any }>({});
+    const mapViewRef = useRef<HTMLDivElement>(null);
     
     const filteredEvents = (activeCategory === 'সব' || activeCategory === 'অনুসন্ধান' ? events : events.filter(e => e.category === activeCategory))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Initialize Leaflet map
-    useEffect(() => {
-        if (activeCategory === 'অনুসন্ধান' || !mapContainerRef.current) return;
-        if (!mapInstanceRef.current) {
-            mapInstanceRef.current = L.map(mapContainerRef.current).setView([23.4617, 91.1850], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(mapInstanceRef.current);
-        }
-    }, [activeCategory]);
+    const selectedEvent = useMemo(() => {
+        if (!selectedEventId) return null;
+        return events.find(e => e.id === selectedEventId);
+    }, [selectedEventId, events]);
 
-    // Update markers on Leaflet map
-    useEffect(() => {
-        if (activeCategory === 'অনুসন্ধان' || !mapInstanceRef.current) return;
-        Object.values(markersRef.current).forEach(marker => (marker as any).remove());
-        markersRef.current = {};
-
-        const eventsToDisplay = activeCategory === 'সব' ? events : filteredEvents;
-
-        eventsToDisplay.forEach(event => {
-            const marker = L.marker([event.coordinates.lat, event.coordinates.lng])
-                .addTo(mapInstanceRef.current)
-                .bindPopup(`<b>${event.title}</b><br>${event.location}`);
-            
-            marker.on('click', () => {
-                setSelectedEventId(event.id);
-            });
-            markersRef.current[event.id] = marker;
-        });
-    }, [filteredEvents, events, activeCategory]);
-
-    // Highlight marker on Leaflet map
-    useEffect(() => {
-        if (activeCategory === 'অনুসন্ধان' || !mapInstanceRef.current) return;
-        Object.values(markersRef.current).forEach((marker: any) => {
-            marker?._icon?.classList.remove('highlighted-marker');
-            marker.setZIndexOffset(0);
-        });
-    
-        if (selectedEventId) {
-            const event = events.find(e => e.id === selectedEventId);
-            const marker = markersRef.current[selectedEventId];
-    
-            if (event && marker) {
-                mapInstanceRef.current.flyTo([event.coordinates.lat, event.coordinates.lng], 15);
-                marker._icon?.classList.add('highlighted-marker');
-                marker.setZIndexOffset(1000);
-                marker.openPopup();
-            }
-        }
-    }, [selectedEventId, events, activeCategory]);
-    
     const handleRsvp = (eventId: string, eventTitle: string) => {
         const newRsvpdEvents = new Set(rsvpdEvents);
         let message = '';
@@ -219,8 +164,8 @@ const CommunityHealthEventsPage: React.FC = () => {
 
     const viewOnMap = (event: CommunityHealthEvent) => {
         setSelectedEventId(event.id);
-        if (mapContainerRef.current) {
-            mapContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (mapViewRef.current) {
+            mapViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
     
@@ -363,7 +308,23 @@ const CommunityHealthEventsPage: React.FC = () => {
                     </section>
                 ) : (
                     <section className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        <div ref={mapContainerRef} className="lg:col-span-2 h-96 lg:h-[70vh] rounded-lg shadow-md z-0"></div>
+                        <div ref={mapViewRef} className="lg:col-span-2 h-96 lg:h-[70vh] rounded-lg shadow-md bg-stone-200 dark:bg-slate-800 p-2">
+                             {selectedEvent ? (
+                                <iframe
+                                    key={selectedEvent.id}
+                                    title="Event Location"
+                                    className="w-full h-full rounded-md border-0"
+                                    loading="lazy"
+                                    allowFullScreen
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedEvent.title + ', ' + selectedEvent.location)}&ll=${selectedEvent.coordinates.lat},${selectedEvent.coordinates.lng}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                                ></iframe>
+                            ) : (
+                                <div className="flex items-center justify-center h-full rounded-md bg-white dark:bg-slate-700">
+                                    <p className="text-stone-500 dark:text-stone-400 text-lg">মানচিত্রে দেখার জন্য তালিকা থেকে একটি ইভেন্ট নির্বাচন করুন।</p>
+                                </div>
+                            )}
+                        </div>
                         <div className="lg:col-span-3 h-[70vh] overflow-y-auto space-y-4 pr-2">
                             {filteredEvents.length > 0 ? filteredEvents.map(event => {
                                 const isRsvpd = rsvpdEvents.has(event.id);

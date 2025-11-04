@@ -3,9 +3,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Volunteer, VolunteerSkill } from '../types';
 import { MagnifyingGlassIcon, MapIcon, PhoneIcon, ShieldCheckIcon, BookmarkIcon, WhatsAppIcon } from '../components/IconComponents';
 
-// Add type declaration for Leaflet
-declare const L: any;
-
 const mockVolunteers: Volunteer[] = [
     { id: 'v1', name: 'রহিমা বেগম', location: 'আদর্শ সদর, কুমিল্লা', skills: ['মাতৃস্বাস্থ্য', 'প্রাথমিক চিকিৎসা'], phone: '01711-111111', whatsapp: true, workingHours: 'সকাল ৯টা - বিকাল ৫টা', verified: true, coordinates: { lat: 23.4617, lng: 91.1850 } },
     { id: 'v2', name: 'করিম শেখ', location: 'লাকসাম, কুমিল্লা', skills: ['প্রাথমিক চিকিৎসা'], phone: '01822-222222', whatsapp: false, workingHours: 'বিকাল ৪টা - রাত ৯টা', verified: true, coordinates: { lat: 23.2425, lng: 91.1213 } },
@@ -24,10 +21,7 @@ const VolunteerDirectoryPage: React.FC = () => {
     const [savedContacts, setSavedContacts] = useState<Set<string>>(new Set());
     const [notification, setNotification] = useState('');
     const [selectedVolunteerId, setSelectedVolunteerId] = useState<string | null>(null);
-
-    const mapContainerRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<any>(null);
-    const markersRef = useRef<{ [key: string]: any }>({});
+    const mapViewRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         try {
@@ -67,54 +61,22 @@ const VolunteerDirectoryPage: React.FC = () => {
     const filteredVolunteers = useMemo(() => {
         return mockVolunteers.filter(v => {
             const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) || v.location.toLowerCase().includes(searchTerm.toLowerCase());
-            // Fix: Explicitly type 's' as VolunteerSkill to resolve type inference issue.
             const matchesSkills = activeSkills.size === 0 || Array.from(activeSkills).every((s: VolunteerSkill) => v.skills.includes(s));
             return matchesSearch && matchesSkills;
         });
     }, [searchTerm, activeSkills]);
-
-    useEffect(() => {
-        if (!mapContainerRef.current) return;
-        if (!mapInstanceRef.current) {
-            mapInstanceRef.current = L.map(mapContainerRef.current).setView([23.46, 91.18], 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(mapInstanceRef.current);
+    
+    const selectedVolunteer = useMemo(() => {
+        if (!selectedVolunteerId) return null;
+        return mockVolunteers.find(v => v.id === selectedVolunteerId);
+    }, [selectedVolunteerId]);
+    
+    const viewOnMap = (volunteer: Volunteer) => {
+        setSelectedVolunteerId(volunteer.id);
+        if (mapViewRef.current) {
+            mapViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-    }, []);
-
-    useEffect(() => {
-        if (!mapInstanceRef.current) return;
-        Object.values(markersRef.current).forEach((marker: any) => marker.remove());
-        markersRef.current = {};
-
-        filteredVolunteers.forEach(v => {
-            const marker = L.marker([v.coordinates.lat, v.coordinates.lng])
-                .addTo(mapInstanceRef.current)
-                .bindPopup(`<b>${v.name}</b><br>${v.location}`);
-            marker.on('click', () => setSelectedVolunteerId(v.id));
-            markersRef.current[v.id] = marker;
-        });
-    }, [filteredVolunteers]);
-
-    useEffect(() => {
-        if (!mapInstanceRef.current) return;
-        Object.values(markersRef.current).forEach((marker: any) => {
-            marker?._icon?.classList.remove('highlighted-marker');
-            marker.setZIndexOffset(0);
-        });
-
-        if (selectedVolunteerId) {
-            const volunteer = filteredVolunteers.find(v => v.id === selectedVolunteerId);
-            const marker = markersRef.current[selectedVolunteerId];
-            if (volunteer && marker) {
-                mapInstanceRef.current.flyTo([volunteer.coordinates.lat, volunteer.coordinates.lng], 14);
-                marker._icon?.classList.add('highlighted-marker');
-                marker.setZIndexOffset(1000);
-                marker.openPopup();
-            }
-        }
-    }, [selectedVolunteerId, filteredVolunteers]);
+    };
 
     return (
         <div className="bg-stone-50 dark:bg-slate-900 py-12 min-h-[calc(100vh-8rem)]">
@@ -151,7 +113,23 @@ const VolunteerDirectoryPage: React.FC = () => {
                 </section>
 
                 <section className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    <div ref={mapContainerRef} className="lg:col-span-2 h-96 lg:h-[70vh] rounded-lg shadow-md z-0"></div>
+                    <div ref={mapViewRef} className="lg:col-span-2 h-96 lg:h-[70vh] rounded-lg shadow-md bg-stone-200 dark:bg-slate-800 p-2">
+                        {selectedVolunteer ? (
+                            <iframe
+                                key={selectedVolunteer.id}
+                                title="Volunteer Location"
+                                className="w-full h-full rounded-md border-0"
+                                loading="lazy"
+                                allowFullScreen
+                                referrerPolicy="no-referrer-when-downgrade"
+                                src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedVolunteer.name + ', ' + selectedVolunteer.location)}&ll=${selectedVolunteer.coordinates.lat},${selectedVolunteer.coordinates.lng}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                            ></iframe>
+                        ) : (
+                            <div className="flex items-center justify-center h-full rounded-md bg-white dark:bg-slate-700">
+                                <p className="text-stone-500 dark:text-stone-400 text-lg">মানচিত্রে দেখার জন্য তালিকা থেকে একজন স্বেচ্ছাসেবক নির্বাচন করুন।</p>
+                            </div>
+                        )}
+                    </div>
                     <div className="lg:col-span-3 h-[70vh] overflow-y-auto space-y-4 pr-2">
                         {filteredVolunteers.length > 0 ? filteredVolunteers.map(v => (
                             <div key={v.id} className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg p-5 border-l-4 transition-all ${selectedVolunteerId === v.id ? 'border-teal-500 shadow-teal-500/20' : 'border-transparent'}`}>
@@ -181,7 +159,7 @@ const VolunteerDirectoryPage: React.FC = () => {
                                     <p><span className="font-semibold">কার্য ঘন্টা:</span> {v.workingHours}</p>
                                 </div>
                                 <div className="mt-4 text-right">
-                                    <button onClick={() => setSelectedVolunteerId(v.id)} className="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors bg-stone-100 dark:bg-slate-700 hover:bg-stone-200 text-stone-600 dark:text-stone-300">মানচিত্রে দেখুন</button>
+                                    <button onClick={() => viewOnMap(v)} className="px-3 py-1.5 text-xs font-semibold rounded-full transition-colors bg-stone-100 dark:bg-slate-700 hover:bg-stone-200 text-stone-600 dark:text-stone-300">মানচিত্রে দেখুন</button>
                                 </div>
                             </div>
                         )) : (
