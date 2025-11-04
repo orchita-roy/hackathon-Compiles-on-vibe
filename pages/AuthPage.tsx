@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import { XMarkIcon, EnvelopeIcon, LockClosedIcon, UserIcon } from '../components/IconComponents';
+import { XMarkIcon, EnvelopeIcon, LockClosedIcon, UserIcon, PhoneIcon } from '../components/IconComponents';
 
 interface AuthPageProps {
     onClose: () => void;
@@ -21,8 +21,10 @@ const GoogleIcon: React.FC = () => (
 
 const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogleLogin }) => {
     const [isLoginView, setIsLoginView] = useState(true);
+    const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
     const [age, setAge] = useState('');
@@ -31,18 +33,24 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogl
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (!email || !password) {
+        
+        const isEmail = authMethod === 'email';
+        if ((isEmail && !email) || (!isEmail && !phone) || !password) {
             setError('অনুগ্রহ করে সমস্ত প্রয়োজনীয় ক্ষেত্র পূরণ করুন।');
             return;
         }
 
         if (isLoginView) {
-            // Mock login - derive name from email for this mock scenario
-            const mockName = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
-            onLogin({ name: mockName, email });
+            let user: User;
+            if (isEmail) {
+                const mockName = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                user = { name: mockName, email };
+            } else {
+                const mockName = `ব্যবহারকারী ${phone.slice(-4)}`;
+                user = { name: mockName, phone };
+            }
+            onLogin(user);
         } else {
-            // Mock signup
             if (!name || !age) {
                 setError('অনুগ্রহ করে সমস্ত প্রয়োজনীয় ক্ষেত্র পূরণ করুন।');
                 return;
@@ -52,7 +60,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogl
                 setError('অনুগ্রহ করে একটি বৈধ বয়স লিখুন।');
                 return;
             }
-            onSignup({ name, email, gender, age: ageNum });
+            const user: User = {
+                name,
+                gender,
+                age: ageNum,
+                ...(isEmail ? { email } : { phone })
+            };
+            onSignup(user);
         }
     };
     
@@ -77,6 +91,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogl
                         <button onClick={() => setIsLoginView(true)} className={`w-1/2 px-4 py-2 font-semibold transition-all rounded-full ${isLoginView ? 'bg-teal-500 text-white shadow-md' : 'text-white/60'}`}>লগইন</button>
                         <button onClick={() => setIsLoginView(false)} className={`w-1/2 px-4 py-2 font-semibold transition-all rounded-full ${!isLoginView ? 'bg-teal-500 text-white shadow-md' : 'text-white/60'}`}>সাইন আপ</button>
                     </div>
+                    
+                    <div className="flex justify-center mb-4 text-sm border border-white/20 rounded-full p-1 w-max mx-auto">
+                        <button type="button" onClick={() => setAuthMethod('email')} className={`px-4 py-1.5 rounded-full transition-colors ${authMethod === 'email' ? 'bg-white/20' : 'bg-transparent text-white/60'}`}>ইমেল</button>
+                        <button type="button" onClick={() => setAuthMethod('phone')} className={`px-4 py-1.5 rounded-full transition-colors ${authMethod === 'phone' ? 'bg-white/20' : 'bg-transparent text-white/60'}`}>ফোন</button>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLoginView && (
@@ -85,10 +104,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogl
                                 <input type="text" placeholder="নাম" value={name} onChange={e => setName(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white/10 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder-white/70" required />
                             </div>
                         )}
-                        <div className="relative">
-                            <EnvelopeIcon className="h-5 w-5 absolute top-1/2 left-4 -translate-y-1/2 text-white/50" />
-                            <input type="email" placeholder="ইমেল" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white/10 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder-white/70" required />
-                        </div>
+                        
+                        {authMethod === 'email' ? (
+                            <div className="relative">
+                                <EnvelopeIcon className="h-5 w-5 absolute top-1/2 left-4 -translate-y-1/2 text-white/50" />
+                                <input type="email" placeholder="ইমেল" value={email} onChange={e => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white/10 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder-white/70" required={authMethod === 'email'} />
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <PhoneIcon className="h-5 w-5 absolute top-1/2 left-4 -translate-y-1/2 text-white/50" />
+                                <input type="tel" placeholder="ফোন নম্বর" value={phone} onChange={e => setPhone(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white/10 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder-white/70" required={authMethod === 'phone'} />
+                            </div>
+                        )}
+
                         <div className="relative">
                             <LockClosedIcon className="h-5 w-5 absolute top-1/2 left-4 -translate-y-1/2 text-white/50" />
                             <input type="password" placeholder="পাসওয়ার্ড" value={password} onChange={e => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white/10 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder-white/70" required />
@@ -127,7 +155,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onLogin, onSignup, onGoogl
                         onClick={onGoogleLogin}
                         className="w-full py-2.5 bg-white text-stone-700 font-semibold rounded-lg flex items-center justify-center hover:bg-stone-200 transition-colors shadow-md">
                        <GoogleIcon />
-                        গুগল দিয়ে সাইন ইন করুন
+                        গুগল দিয়ে চালিয়ে যান
                     </button>
                 </div>
             </div>

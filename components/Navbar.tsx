@@ -158,7 +158,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700">
                             <div className="p-4 border-b dark:border-slate-700">
                                 <p className="font-bold text-lg text-stone-800 dark:text-white truncate">{currentUser.name}</p>
-                                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">{currentUser.email}</p>
+                                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">{currentUser.email || currentUser.phone}</p>
                                 <div className="text-sm text-stone-500 dark:text-stone-400 mt-2 flex gap-4">
                                     {currentUser.gender && <span>লিঙ্গ: {currentUser.gender === 'male' ? 'পুরুষ' : currentUser.gender === 'female' ? 'মহিলা' : 'অন্যান্য'}</span>}
                                     {currentUser.age && <span>বয়স: {currentUser.age}</span>}

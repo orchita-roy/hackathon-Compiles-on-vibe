@@ -24,7 +24,8 @@ export interface Notification {
 
 export interface User {
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   gender?: 'male' | 'female' | 'other';
   age?: number;
 }
