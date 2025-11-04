@@ -11,11 +11,11 @@ Mood slider with emoji scale (happy → neutral → sad).
 
 Optional text or voice input for reflections.
 
-Daily/weekly trends graph (local storage only).
+Daily/weekly trends graph .
 
-Privacy-first storage (data never shared unless user chooses).
+Privacy-first storage .
 
-Gentle reminders after inactivity (e.g., 3 days).
+Gentle reminders after inactivity .
 
 Contextual wellness tips based on responses.
 
@@ -26,9 +26,9 @@ Key Features:
 
 Map with offline geolocation caching.
 
-Search by facility type (clinic, hospital, NGO, pharmacy).
+Search by facility type .
 
-Landmark-based directions (e.g., “near the big mango tree”).
+Landmark-based directions .
 
 Facility opening hours and contact info.
 
@@ -49,7 +49,6 @@ Confirmation message (“Your request has been sent”).
 
 Option to share contact info later.
 
-Trained volunteer assignment backend (NGO login).
 
 Localized consent and trust-building UI cues.
 
