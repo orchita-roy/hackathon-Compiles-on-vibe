@@ -12,6 +12,7 @@ export enum Page {
   SymptomAwarenessGuide,
   CommunityHealthEvents,
   VolunteerDirectory,
+  NpmManager,
 }
 
 export interface Notification {
@@ -123,4 +124,10 @@ export interface Volunteer {
         lat: number;
         lng: number;
     };
+}
+
+export interface NpmPackage {
+    name: string;
+    description: string;
+    version: string;
 }

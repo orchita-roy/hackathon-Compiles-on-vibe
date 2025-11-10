@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Page, Notification, User } from './types';
 import Navbar from './components/Navbar';
@@ -17,6 +15,7 @@ import MaternalAndChildHealthPage from './pages/MaternalAndChildHealthPage';
 import SymptomAwarenessGuidePage from './pages/SymptomAwarenessGuidePage';
 import CommunityHealthEventsPage from './pages/CommunityHealthEventsPage';
 import VolunteerDirectoryPage from './pages/VolunteerDirectoryPage';
+import NpmManagerPage from './pages/NpmManagerPage';
 import AuthPage from './pages/AuthPage';
 
 type Theme = 'light' | 'dark';
@@ -104,6 +103,16 @@ const App: React.FC = () => {
     addNotification('আপনি সফলভাবে লগ আউট করেছেন।', 'info');
   }, [addNotification]);
 
+  const handleResetApp = useCallback(() => {
+    const confirmation = window.confirm(
+      "আপনি কি নিশ্চিত? এটি আপনার সমস্ত সংরক্ষিত ডেটা যেমন প্রোফাইল, স্বাস্থ্য চেক-ইন এবং অফলাইন ডেটা স্থায়ীভাবে মুছে ফেলবে।"
+    );
+    if (confirmation) {
+        localStorage.clear();
+        window.location.reload();
+    }
+  }, []);
+
   const markNotificationAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }, []);
@@ -156,6 +165,8 @@ const App: React.FC = () => {
         return <CommunityHealthEventsPage addNotification={addNotification} />;
       case Page.VolunteerDirectory:
         return <VolunteerDirectoryPage addNotification={addNotification} />;
+      case Page.NpmManager:
+        return <NpmManagerPage addNotification={addNotification} />;
       default:
         return <HomePage navigateTo={navigateTo} />;
     }
@@ -174,6 +185,7 @@ const App: React.FC = () => {
         currentUser={currentUser}
         onLoginClick={() => setIsAuthModalOpen(true)}
         onLogoutClick={handleLogout}
+        onResetClick={handleResetApp}
       />
       <main className="flex-grow">
         {renderPage()}

@@ -42,7 +42,7 @@ const Chatbot: React.FC = () => {
 
     } catch (error) {
       console.error('Gemini chat error:', error);
-      const errorMessage: Message = { id: Date.now().toString() + 'e', text: 'Sorry, I encountered an error. Please try again.', sender: 'bot' };
+      const errorMessage: Message = { id: Date.now().toString() + 'e', text: 'দুঃখিত, একটি ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।', sender: 'bot' };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -54,7 +54,7 @@ const Chatbot: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 bg-teal-600 text-white p-4 rounded-full shadow-lg hover:bg-teal-700 transition-transform duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 z-50"
-        aria-label="Toggle chatbot"
+        aria-label="চ্যাটবট খুলুন/বন্ধ করুন"
       >
         <ChatBubbleOvalLeftEllipsisIcon className="h-8 w-8" />
       </button>
@@ -96,7 +96,7 @@ const Chatbot: React.FC = () => {
               onClick={() => sendMessage(input)}
               disabled={isLoading || !input.trim()}
               className="ml-2 p-3 bg-teal-600 text-white rounded-full hover:bg-teal-700 disabled:bg-teal-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-              aria-label="Send message"
+              aria-label="বার্তা পাঠান"
             >
               <PaperAirplaneIcon className="h-5 w-5" />
             </button>

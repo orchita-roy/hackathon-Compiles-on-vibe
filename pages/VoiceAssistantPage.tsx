@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MicrophoneIcon } from '../components/IconComponents';
+import { MicrophoneIcon, ArrowPathIcon } from '../components/IconComponents';
 import { startLiveHealthSession, createPcmBlob } from '../services/geminiService';
 // Fix: Removed `LiveSession` as it's no longer exported from `@google/genai`.
 import { LiveServerMessage } from '@google/genai';
@@ -112,6 +112,22 @@ const VoiceAssistantPage: React.FC = () => {
         sessionPromiseRef.current = null;
     }, []);
 
+    const handleRestart = useCallback(() => {
+        cleanup();
+        setStatus('idle');
+        setError('');
+        setTranscripts([]);
+        setCurrentInterimUserTranscript('');
+        setCurrentBotTranscript('');
+        userTranscriptForTurnRef.current = '';
+        botTranscriptForTurnRef.current = '';
+        try {
+            localStorage.removeItem('voiceAssistantTranscripts');
+        } catch (e) {
+            console.error('Failed to clear transcripts from storage:', e);
+        }
+    }, [cleanup]);
+
     // Main session handling function
     const handleToggleSession = useCallback(async () => {
         if (status === 'connected' || status === 'connecting') {
@@ -191,7 +207,7 @@ const VoiceAssistantPage: React.FC = () => {
                     }
                 },
                 onError: (e: ErrorEvent) => {
-                    setError('Connection error. Please try again.');
+                    setError('সংযোগ ত্রুটি। অনুগ্রহ করে আবার চেষ্টা করুন।');
                     setStatus('error');
                     cleanup();
                 },
@@ -201,7 +217,7 @@ const VoiceAssistantPage: React.FC = () => {
                 }
             });
         } catch (err) {
-            setError('Could not access microphone. Please check permissions.');
+            setError('মাইক্রোফোন অ্যাক্সেস করা যায়নি। অনুগ্রহ করে অনুমতি পরীক্ষা করুন।');
             setStatus('error');
             cleanup();
         }
@@ -263,14 +279,26 @@ const VoiceAssistantPage: React.FC = () => {
 
             {/* Controls */}
             <div className="p-4 border-t dark:border-slate-700 flex flex-col items-center">
-                <button
-                    onClick={handleToggleSession}
-                    className={`w-20 h-20 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-105 text-white ${style} ${pulse ? 'animate-pulse' : ''}`}
-                    aria-label={label}
-                    disabled={status === 'connecting'}
-                >
-                    <MicrophoneIcon className="h-10 w-10" />
-                </button>
+                <div className="relative w-full max-w-xs flex justify-center items-center">
+                    <div className="absolute left-0">
+                         <button
+                            onClick={handleRestart}
+                            className="w-14 h-14 rounded-full shadow-md flex items-center justify-center bg-stone-200 dark:bg-slate-700 hover:bg-stone-300 dark:hover:bg-slate-600 transition-colors text-stone-600 dark:text-stone-300"
+                            aria-label="কথোপকথন পুনরায় শুরু করুন"
+                        >
+                            <ArrowPathIcon className="h-7 w-7" />
+                        </button>
+                    </div>
+                    <button
+                        onClick={handleToggleSession}
+                        className={`w-20 h-20 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-105 text-white ${style} ${pulse ? 'animate-pulse' : ''}`}
+                        aria-label={label}
+                        disabled={status === 'connecting'}
+                    >
+                        <MicrophoneIcon className="h-10 w-10" />
+                    </button>
+                </div>
+
                 <p className="mt-4 text-lg text-stone-600 dark:text-stone-300 h-6">{label}</p>
             </div>
         </div>

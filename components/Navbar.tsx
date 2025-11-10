@@ -13,6 +13,7 @@ interface NavbarProps {
   currentUser: User | null;
   onLoginClick: () => void;
   onLogoutClick: () => void;
+  onResetClick: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -25,7 +26,8 @@ const Navbar: React.FC<NavbarProps> = ({
   markAllNotificationsAsRead,
   currentUser,
   onLoginClick,
-  onLogoutClick
+  onLogoutClick,
+  onResetClick
 }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -51,143 +53,112 @@ const Navbar: React.FC<NavbarProps> = ({
         setIsProfileOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
-  const headerClasses = 'bg-stone-50/80 dark:bg-slate-900/80 backdrop-blur-md shadow-md sticky';
-  const logoClasses = 'text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300';
-  const themeToggleClasses = 'text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 focus:ring-offset-stone-100 dark:focus:ring-offset-slate-800';
-
-  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : '?';
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   return (
-    <header className={`${headerClasses} top-0 z-50 transition-colors duration-300`}>
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Left side: Logo and nav items */}
           <div className="flex items-center">
-            <button onClick={() => navigateTo(Page.Home)} className={`flex items-center space-x-2 transition-colors ${logoClasses}`}>
-              <HeartIcon className="h-8 w-8" />
-              <span className="font-bold text-xl">স্বাস্থ্য বন্ধু</span>
+            <button onClick={() => navigateTo(Page.Home)} className="flex-shrink-0 flex items-center space-x-2">
+              <HeartIcon className="h-8 w-8 text-teal-500" />
+              <span className="text-xl font-bold text-stone-800 dark:text-stone-100">স্বাস্থ্য বন্ধু</span>
             </button>
-          </div>
-          <div className="flex items-center">
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                {navItems.map((item) => {
-                  const isActive = currentPage === item.page;
-                  const baseClasses = "px-3 py-2 rounded-md text-sm font-medium transition-colors";
-                  const activeClasses = 'bg-teal-600 text-white';
-                  const inactiveClasses = 'text-stone-700 dark:text-stone-300 hover:bg-teal-100 dark:hover:bg-slate-800 hover:text-teal-800 dark:hover:text-white';
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => navigateTo(item.page)}
-                      className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
+                {navItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => navigateTo(item.page)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      currentPage === item.page
+                        ? 'bg-teal-50 text-teal-700 dark:bg-slate-800 dark:text-teal-400'
+                        : 'text-stone-600 hover:bg-teal-50 hover:text-teal-700 dark:text-stone-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
-            <div className="relative ml-4" ref={notificationsRef}>
-              <button
-                onClick={() => setIsNotificationsOpen(prev => !prev)}
-                className={`p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 relative ${themeToggleClasses}`}
-                aria-label="Toggle notifications"
-              >
+          {/* Right side: Theme toggle, notifications, profile */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <button onClick={toggleTheme} className="p-2 rounded-full text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors">
+              {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
+            </button>
+            
+            {/* Notifications dropdown */}
+            <div className="relative" ref={notificationsRef}>
+              <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="p-2 rounded-full text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-slate-800 relative transition-colors">
                 <BellIcon className="h-6 w-6" />
-                {hasUnread && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-teal-500 ring-2 ring-stone-50 dark:ring-slate-900"></span>}
+                {hasUnread && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>}
               </button>
-              
               {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 max-h-[80vh] overflow-y-auto bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700">
-                  <div className="p-3 flex justify-between items-center border-b dark:border-slate-700 sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-                    <h3 className="font-bold text-stone-800 dark:text-white">নোটিফিকেশন</h3>
-                    <button
-                      onClick={markAllNotificationsAsRead}
-                      className="text-xs text-teal-600 dark:text-teal-400 hover:underline"
-                      disabled={!hasUnread}
-                    >
-                      সব পঠিত হিসাবে চিহ্নিত করুন
-                    </button>
+                <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <div className="py-1">
+                    <div className="px-4 py-2 flex justify-between items-center border-b dark:border-slate-700">
+                      <h3 className="text-sm font-medium text-stone-900 dark:text-white">নোটিফিকেশন ({unreadCount})</h3>
+                      {unreadCount > 0 && <button onClick={markAllNotificationsAsRead} className="text-xs text-teal-600 dark:text-teal-400 hover:underline">সব পঠিত করুন</button>}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                    {notifications.length > 0 ? notifications.map(n => (
+                      <div key={n.id} className={`p-4 border-b dark:border-slate-700 ${!n.read ? 'bg-teal-50 dark:bg-slate-700/50' : ''}`}>
+                        <p className={`text-sm ${ n.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-stone-600 dark:text-stone-300'}`}>{n.message}</p>
+                        {!n.read && <button onClick={() => markNotificationAsRead(n.id)} className="text-xs text-stone-500 hover:text-stone-800 mt-1">পঠিত হিসাবে চিহ্নিত করুন</button>}
+                      </div>
+                    )) : (
+                      <p className="text-sm text-stone-500 dark:text-stone-400 p-4 text-center">কোনো নোটিফিকেশন নেই</p>
+                    )}
+                    </div>
                   </div>
-                  {notifications.length === 0 ? (
-                    <p className="p-4 text-center text-sm text-stone-500 dark:text-stone-400">আপনার কোনো নোটিফিকেশন নেই।</p>
-                  ) : (
-                    <ul>
-                      {notifications.map(n => (
-                        <li key={n.id} className={`border-b dark:border-slate-700 ${!n.read ? 'bg-teal-50 dark:bg-slate-700/50' : ''}`}>
-                          <button onClick={() => markNotificationAsRead(n.id)} className="w-full text-left p-3 hover:bg-stone-100 dark:hover:bg-slate-700 flex items-start gap-3">
-                            {!n.read && <span className="mt-1.5 block h-2 w-2 rounded-full bg-teal-500 flex-shrink-0"></span>}
-                            <div className={n.read ? 'pl-5' : ''}>
-                              <p className="text-sm text-stone-700 dark:text-stone-300">{n.message}</p>
-                              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                                {new Date(n.timestamp).toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'})}
-                              </p>
-                            </div>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
               )}
             </div>
 
-            <button
-              onClick={toggleTheme}
-              className={`ml-2 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${themeToggleClasses}`}
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}
-            </button>
-
-            <div className="relative ml-3" ref={profileRef}>
+            {/* Profile dropdown */}
+            <div className="relative" ref={profileRef}>
               {currentUser ? (
-                  <>
-                    <button
-                        onClick={() => setIsProfileOpen(prev => !prev)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 bg-teal-600 text-white`}
-                    >
-                        {userInitial}
-                    </button>
-                    {isProfileOpen && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700">
-                            <div className="p-4 border-b dark:border-slate-700">
-                                <p className="font-bold text-lg text-stone-800 dark:text-white truncate">{currentUser.name}</p>
-                                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">{currentUser.email || currentUser.phone}</p>
-                                <div className="text-sm text-stone-500 dark:text-stone-400 mt-2 flex gap-4">
-                                    {currentUser.gender && <span>লিঙ্গ: {currentUser.gender === 'male' ? 'পুরুষ' : currentUser.gender === 'female' ? 'মহিলা' : 'অন্যান্য'}</span>}
-                                    {currentUser.age && <span>বয়স: {currentUser.age}</span>}
-                                </div>
-                            </div>
-                            <div className="p-2">
-                                <button
-                                    onClick={() => { onLogoutClick(); setIsProfileOpen(false); }}
-                                    className="w-full text-left px-3 py-2 rounded-md text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-slate-700 transition-colors"
-                                >
-                                    লগআউট
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                  </>
-              ) : (
-                  <button
-                      onClick={onLoginClick}
-                      className="px-4 py-2 text-sm font-medium text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-slate-700 rounded-md hover:bg-stone-200 dark:hover:bg-slate-600 transition-colors"
-                  >
-                      লগইন
+                <div>
+                  <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="p-1 rounded-full text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                    <UserCircleIcon className="h-8 w-8" />
                   </button>
+                  {isProfileOpen && (
+                    <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg py-1 bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5">
+                      <div className="px-4 py-3 border-b dark:border-slate-700">
+                        <p className="text-sm text-stone-900 dark:text-white font-medium">হিসাবে সাইন ইন করেছেন</p>
+                        <p className="text-sm text-stone-700 dark:text-stone-300 truncate font-semibold">{currentUser.name}</p>
+                      </div>
+                      <button onClick={onLogoutClick} className="block w-full text-left px-4 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-slate-700">
+                        লগ আউট
+                      </button>
+                      <button onClick={onResetClick} className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-stone-100 dark:hover:bg-slate-700">
+                        অ্যাপ রিসেট করুন
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={onLoginClick}
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                >
+                  লগইন / সাইন আপ
+                </button>
               )}
             </div>
           </div>
         </div>
-      </nav>
-    </header>
+      </div>
+    </nav>
   );
 };
 
